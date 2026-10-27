@@ -16,21 +16,41 @@ import {
   LogOut,
   Compass,
   RefreshCcw,
-  ChevronLeft,
-  ChevronRight
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 
-const menuItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-5 h-5 shrink-0" /> },
-  { name: 'Booking', href: '/booking', icon: <Ticket className="w-5 h-5 shrink-0" /> },
-  { name: 'Pelanggan', href: '/pelanggan', icon: <Users className="w-5 h-5 shrink-0" /> },
-  { name: 'Jadwal & Rute', href: '/jadwal', icon: <Calendar className="w-5 h-5 shrink-0" /> },
-  { name: 'Transportasi', href: '/transportasi', icon: <Bus className="w-5 h-5 shrink-0" /> },
-  { name: 'Pembayaran', href: '/pembayaran', icon: <CreditCard className="w-5 h-5 shrink-0" /> },
-  { name: 'Refund', href: '/refund', icon: <RefreshCcw className="w-5 h-5 shrink-0" /> },
-  { name: 'Promo', href: '/promo', icon: <Tag className="w-5 h-5 shrink-0" /> },
-  { name: 'Laporan', href: '/laporan', icon: <BarChart3 className="w-5 h-5 shrink-0" /> },
-  { name: 'Pengaturan', href: '/pengaturan', icon: <Settings className="w-5 h-5 shrink-0" /> },
+const menuGroups = [
+  {
+    title: 'Utama',
+    items: [
+      { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-5 h-5 shrink-0" /> },
+    ]
+  },
+  {
+    title: 'Operasional',
+    items: [
+      { name: 'Booking', href: '/booking', icon: <Ticket className="w-5 h-5 shrink-0" /> },
+      { name: 'Pelanggan', href: '/pelanggan', icon: <Users className="w-5 h-5 shrink-0" /> },
+      { name: 'Jadwal & Rute', href: '/jadwal', icon: <Calendar className="w-5 h-5 shrink-0" /> },
+      { name: 'Transportasi', href: '/transportasi', icon: <Bus className="w-5 h-5 shrink-0" /> },
+    ]
+  },
+  {
+    title: 'Keuangan & Analisis',
+    items: [
+      { name: 'Pembayaran', href: '/pembayaran', icon: <CreditCard className="w-5 h-5 shrink-0" /> },
+      { name: 'Refund', href: '/refund', icon: <RefreshCcw className="w-5 h-5 shrink-0" /> },
+      { name: 'Promo', href: '/promo', icon: <Tag className="w-5 h-5 shrink-0" /> },
+      { name: 'Laporan', href: '/laporan', icon: <BarChart3 className="w-5 h-5 shrink-0" /> },
+    ]
+  },
+  {
+    title: 'Sistem',
+    items: [
+      { name: 'Pengaturan', href: '/pengaturan', icon: <Settings className="w-5 h-5 shrink-0" /> },
+    ]
+  }
 ];
 
 interface SidebarProps {
@@ -48,15 +68,17 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
         isOpen ? 'w-64 p-4' : 'w-20 p-3 items-center'
       }`}
     >
-      {/* Tombol Toggle Kotak Gandeng Menempel di Sisi Sidebar */}
+      {/* Tombol Toggle */}
       {onToggle && (
         <button
           onClick={onToggle}
           type="button"
           title={isOpen ? 'Tutup Sidebar' : 'Buka Sidebar'}
-          className="absolute top-6 -right-3.5 z-50 w-7 h-7 bg-[#0A64BC] text-white border-2 border-white rounded-lg shadow-md flex items-center justify-center hover:bg-blue-700 hover:scale-105 transition-all cursor-pointer"
+          className={`absolute top-14 z-50 p-1 text-white hover:text-blue-200 hover:scale-110 transition-all cursor-pointer ${
+            isOpen ? 'right-3' : 'right-2.5'
+          }`}
         >
-          {isOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          {isOpen ? <PanelLeftClose className="w-6 h-6" /> : <PanelLeftOpen className="w-6 h-6" />}
         </button>
       )}
 
@@ -87,13 +109,13 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
           )}
         </div>
 
-        {/* GARIS PEMBATAS ATAS (Dibuat Lebih Jelas & Kontras) */}
+        {/* GARIS PEMBATAS ATAS */}
         <div className="border-b border-white/25 my-2.5 shrink-0 w-full" />
 
-        {/* Menu Navigasi dengan Custom Scrollbar yang Jelas */}
+        {/* Menu Navigasi Per Group */}
         <div className="relative flex-1 min-h-0 w-full flex flex-col pt-1">
           <nav
-            className="space-y-1 w-full flex-1 overflow-y-auto pr-1.5 
+            className="space-y-4 w-full flex-1 overflow-y-auto pr-1.5 
                        [&::-webkit-scrollbar]:w-1.5 
                        [&::-webkit-scrollbar-track]:bg-white/10 
                        [&::-webkit-scrollbar-track]:rounded-full 
@@ -101,34 +123,48 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                        [&::-webkit-scrollbar-thumb]:rounded-full 
                        hover:[&::-webkit-scrollbar-thumb]:bg-white/70"
           >
-            {menuItems.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                (item.href !== '/dashboard' && pathname.startsWith(item.href));
+            {menuGroups.map((group, index) => (
+              <div key={index} className="space-y-1">
+                {/* Judul Kelompok Menu */}
+                {isOpen ? (
+                  <h2 className="text-[10px] font-bold text-blue-200 uppercase tracking-wider px-3 mb-1 opacity-80">
+                    {group.title}
+                  </h2>
+                ) : (
+                  <div className="border-t border-white/10 my-2 w-full" />
+                )}
 
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  title={!isOpen ? item.name : undefined}
-                  className={`flex items-center font-medium rounded-xl transition-all text-xs py-2.5 ${
-                    isOpen ? 'gap-3 px-3.5' : 'justify-center px-0'
-                  } ${
-                    isActive
-                      ? 'bg-white text-[#0A64BC] font-semibold shadow-md translate-x-0.5'
-                      : 'text-blue-100 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  {item.icon}
-                  {isOpen && <span className="whitespace-nowrap">{item.name}</span>}
-                </Link>
-              );
-            })}
+                {/* List Item Menu */}
+                {group.items.map((item) => {
+                  const isActive =
+                    pathname === item.href ||
+                    (item.href !== '/dashboard' && pathname.startsWith(item.href));
+
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      title={!isOpen ? item.name : undefined}
+                      className={`flex items-center font-medium rounded-xl transition-all text-xs py-2.5 ${
+                        isOpen ? 'gap-3 px-3.5' : 'justify-center px-0'
+                      } ${
+                        isActive
+                          ? 'bg-white text-[#0A64BC] font-semibold shadow-md translate-x-0.5'
+                          : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {item.icon}
+                      {isOpen && <span className="whitespace-nowrap">{item.name}</span>}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
         </div>
       </div>
 
-      {/* GARIS PEMBATAS BAWAH (Dibuat Lebih Jelas & Kontras) */}
+      {/* GARIS PEMBATAS BAWAH & FOOTER PROFILE */}
       <div className={`pt-3 mt-2 border-t border-white/25 shrink-0 space-y-2 bg-[#084C8D]/40 rounded-xl p-2 ${isOpen ? 'w-full' : 'w-full flex flex-col items-center'}`}>
         <div className={`flex items-center ${isOpen ? 'gap-2.5 px-1' : 'justify-center'}`}>
           <div className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center font-bold text-xs shrink-0 shadow-inner">
