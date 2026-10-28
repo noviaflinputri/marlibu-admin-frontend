@@ -98,21 +98,17 @@ export default function BookingView() {
 
   // Logika Pemfilteran Data
   const filteredBookings = bookings.filter((item) => {
-    // 1. Filter Pencarian Teks (Kata Kunci)
     const matchQuery =
       item.kodeBooking.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.namaPelanggan.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.rute.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // 2. Filter Rute
     const matchRute =
       selectedRute === 'Semua Rute' || item.rute === selectedRute;
 
-    // 3. Filter Status
     const matchStatus =
       selectedStatus === 'Semua Status' || item.status === selectedStatus;
 
-    // 4. Filter Tanggal (jika diisi)
     const matchDate =
       !filterDate || item.tanggalBerangkat === filterDate;
 
@@ -171,12 +167,11 @@ export default function BookingView() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full font-sans bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          {/* Judul diubah menjadi text-[#0A64BC] */}
-          <h1 className="text-2xl font-bold text-[#0A64BC] tracking-tight">Data Booking</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#0A64BC] tracking-tight">Data Booking</h1>
           <p className="text-xs text-gray-500 mt-1">
             Kelola dan pantau semua pesanan travel.
           </p>
@@ -227,7 +222,7 @@ export default function BookingView() {
             <option value="Selesai">Selesai</option>
           </select>
 
-          {/* Tombol Reset Filter jika ada yang terisi */}
+          {/* Tombol Reset Filter */}
           {(searchQuery || selectedRute !== 'Semua Rute' || selectedStatus !== 'Semua Status' || filterDate) && (
             <button
               onClick={() => {

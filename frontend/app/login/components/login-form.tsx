@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react'; // Import signIn dari NextAuth
+import { signIn } from 'next-auth/react';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -21,7 +21,11 @@ export default function LoginForm() {
   const handleGoogleLogin = async () => {
     setLoadingGoogle(true);
     try {
-      await signIn('google', { callbackUrl: '/dashboard' });
+      // Memaksa Google menampilkan layar pilih akun (prompt: 'select_account')
+      await signIn('google', { 
+        callbackUrl: '/dashboard',
+        prompt: 'select_account'
+      });
     } catch (error) {
       console.error('Login Google Gagal:', error);
     } finally {
@@ -68,7 +72,7 @@ export default function LoginForm() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 placeholder="Masukkan email"
                 required
                 autoComplete="off"

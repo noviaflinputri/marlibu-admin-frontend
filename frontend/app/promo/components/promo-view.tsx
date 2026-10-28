@@ -124,11 +124,11 @@ export default function PromoView() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full font-sans bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#0A64BC] tracking-tight">Manajemen Promo & Diskon</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#0A64BC] tracking-tight">Manajemen Promo & Diskon</h1>
           <p className="text-xs text-gray-500 mt-1">
             Kelola kode voucher, potongan harga, dan periode promo travel.
           </p>
@@ -144,7 +144,7 @@ export default function PromoView() {
       {/* Tabel Promo */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs whitespace-nowrap">
             <thead className="bg-gray-50 text-gray-400 font-semibold border-b border-gray-100">
               <tr>
                 <th className="py-3.5 px-4">ID</th>

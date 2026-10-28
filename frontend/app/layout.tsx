@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import Sidebar from './components/sidebar';
+import Sidebar from '../components/sidebar';
+import { Menu } from 'lucide-react';
 import './globals.css';
 
 export default function RootLayout({
@@ -13,8 +14,8 @@ export default function RootLayout({
   const pathname = usePathname();
   const isLoginPage = pathname === '/login';
 
-  // State untuk kontrol Buka / Tutup Sidebar
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
     <html lang="id">
@@ -23,24 +24,31 @@ export default function RootLayout({
           <main className="w-full h-full overflow-y-auto">{children}</main>
         ) : (
           <div className="flex w-full h-full overflow-hidden">
-            {/* Sidebar dengan Tombol Toggle Gandeng */}
             <Sidebar 
               isOpen={isSidebarOpen} 
               onToggle={() => setIsSidebarOpen(!isSidebarOpen)} 
+              isMobileOpen={isMobileOpen}
+              onMobileClose={() => setIsMobileOpen(false)}
             />
 
-            {/* Area Utama */}
             <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
-              {/* Header Topbar */}
-              <header className="bg-white border-b border-gray-100 py-3 px-6 flex justify-end items-center shrink-0 z-10">
-                {/* Badge Status Admin */}
+              <header className="bg-white border-b border-gray-100 py-3 px-4 md:px-6 flex justify-between lg:justify-end items-center shrink-0 z-10">
+                {/* Tombol Hamburger (Muncul di HP & Tablet / < 1024px) */}
+                <button
+                  type="button"
+                  onClick={() => setIsMobileOpen(true)}
+                  className="lg:hidden p-1.5 rounded-lg text-gray-600 hover:bg-gray-100 cursor-pointer focus:outline-none"
+                  title="Buka Menu"
+                >
+                  <Menu className="w-6 h-6" />
+                </button>
+
                 <span className="text-xs font-semibold text-white bg-[#0A64BC] px-3.5 py-1.5 rounded-full shadow-2xs">
                   Admin Marlibu
                 </span>
               </header>
 
-              {/* Konten Utama */}
-              <main className="p-6 md:p-8 flex-1 overflow-y-auto">
+              <main className="flex-1 overflow-y-auto">
                 {children}
               </main>
             </div>
