@@ -1,211 +1,252 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Search, Eye, Trash2, X, Calendar, CheckCircle2, Clock } from 'lucide-react';
 
-// Data Mockup Awal Pelanggan
-const initialCustomersData = [
-  { id: 1, name: 'Andi Pratama', email: 'andi@email.com', phone: '0812 3456 7890', totalBooking: 5 },
-  { id: 2, name: 'Siti Aisyah', email: 'siti@email.com', phone: '0813 5678 9012', totalBooking: 3 },
-  { id: 3, name: 'Budi Santoso', email: 'budi@email.com', phone: '0821 2345 6789', totalBooking: 7 },
-  { id: 4, name: 'Rina Lestari', email: 'rina@email.com', phone: '0832 9876 5432', totalBooking: 2 },
-  { id: 5, name: 'Dewi Anggraini', email: 'dewi@email.com', phone: '0813 1112 1314', totalBooking: 4 },
-  { id: 6, name: 'Agus Setiawan', email: 'agus@email.com', phone: '0812 2233 4543', totalBooking: 1 },
-  { id: 7, name: 'Putri Kencana', email: 'putri@email.com', phone: '0821 5566 0066', totalBooking: 6 },
-  { id: 8, name: 'Fajar Nugroho', email: 'fajar@email.com', phone: '0813 7777 8888', totalBooking: 3 },
+interface BookingHistory {
+  idBooking: string;
+  rute: string;
+  tanggal: string;
+  totalHarga: number;
+  status: 'Selesai' | 'Proses' | 'Dibatalkan';
+}
+
+interface CustomerItem {
+  id: string;
+  nama: string;
+  email: string;
+  telepon: string;
+  totalBooking: number;
+  riwayatBooking: BookingHistory[];
+}
+
+const initialCustomers: CustomerItem[] = [
+  {
+    id: '1',
+    nama: 'Andi Pratama',
+    email: 'andi@email.com',
+    telepon: '0812 3456 7890',
+    totalBooking: 5,
+    riwayatBooking: [
+      { idBooking: 'TRV001234', rute: 'Malang - Surabaya', tanggal: '12 Okt 2026', totalHarga: 500000, status: 'Selesai' },
+      { idBooking: 'TRV001102', rute: 'Surabaya - Bali', tanggal: '01 Sep 2026', totalHarga: 750000, status: 'Selesai' },
+      { idBooking: 'TRV000985', rute: 'Malang - Yogyakarta', tanggal: '15 Agu 2026', totalHarga: 600000, status: 'Selesai' },
+    ],
+  },
+  {
+    id: '2',
+    nama: 'Siti Aisyah',
+    email: 'siti@email.com',
+    telepon: '0813 5678 9012',
+    totalBooking: 3,
+    riwayatBooking: [
+      { idBooking: 'TRV001240', rute: 'Jakarta - Bandung', tanggal: '10 Okt 2026', totalHarga: 350000, status: 'Proses' },
+      { idBooking: 'TRV001155', rute: 'Bandung - Semarang', tanggal: '20 Sep 2026', totalHarga: 450000, status: 'Selesai' },
+    ],
+  },
+  {
+    id: '3',
+    nama: 'Budi Santoso',
+    email: 'budi@email.com',
+    telepon: '0821 2345 6789',
+    totalBooking: 7,
+    riwayatBooking: [
+      { idBooking: 'TRV001211', rute: 'Surabaya - Malang', tanggal: '05 Okt 2026', totalHarga: 250000, status: 'Selesai' },
+    ],
+  },
+  {
+    id: '4',
+    nama: 'Rina Lestari',
+    email: 'rina@email.com',
+    telepon: '0832 9876 5432',
+    totalBooking: 2,
+    riwayatBooking: [
+      { idBooking: 'TRV001190', rute: 'Malang - Jakarta', tanggal: '28 Sep 2026', totalHarga: 850000, status: 'Selesai' },
+    ],
+  },
+  {
+    id: '5',
+    nama: 'Dewi Anggraini',
+    email: 'dewi@email.com',
+    telepon: '0813 1112 1314',
+    totalBooking: 4,
+    riwayatBooking: [
+      { idBooking: 'TRV001188', rute: 'Surabaya - Yogyakarta', tanggal: '25 Sep 2026', totalHarga: 400000, status: 'Selesai' },
+    ],
+  },
 ];
 
 export default function CustomerTable() {
-  const [customers, setCustomers] = useState(initialCustomersData);
+  const [customers, setCustomers] = useState<CustomerItem[]>(initialCustomers);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerItem | null>(null);
 
-  // State Modal Konfirmasi Hapus
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedCustomerForDelete, setSelectedCustomerForDelete] = useState<{ id: number; name: string } | null>(null);
-
-  // Handle Pencarian
   const filteredCustomers = customers.filter(
-    (customer) =>
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.phone.includes(searchTerm)
+    (item) =>
+      item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.telepon.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Buka Modal Hapus
-  const openDeleteModal = (id: number, name: string) => {
-    setSelectedCustomerForDelete({ id, name });
-    setIsDeleteModalOpen(true);
-  };
-
-  // Eksekusi Hapus Pelanggan
-  const confirmDeleteCustomer = () => {
-    if (selectedCustomerForDelete) {
-      setCustomers(customers.filter((customer) => customer.id !== selectedCustomerForDelete.id));
-      setIsDeleteModalOpen(false);
-      setSelectedCustomerForDelete(null);
-    }
-  };
-
   return (
-    <div className="p-6 space-y-4 w-full font-sans max-w-7xl mx-auto">
-      
-      {/* Header Halaman + Search Bar sejajar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="pt-2 px-4 md:px-6 pb-6 space-y-5 w-full font-sans max-w-7xl mx-auto relative">
+      {/* Header Halaman */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#0A64BC] tracking-tight">Data Pelanggan</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Kelola data pelanggan dan riwayat pemesanan.</p>
-        </div>
-
-        {/* Search Bar Kompak */}
-        <div className="relative w-full sm:w-72">
-          <input
-            type="text"
-            placeholder="Cari nama, email, atau telepon..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white text-xs pl-9 pr-4 py-2 rounded-xl border border-gray-200 shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#0A64BC] text-gray-700 placeholder:text-gray-400"
-          />
-          <svg
-            className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <p className="text-[11px] text-gray-500 mt-0.5">
+            Kelola data pelanggan dan riwayat pemesanan.
+          </p>
         </div>
       </div>
 
       {/* Tabel Data Pelanggan */}
-      <div className="bg-white rounded-xl shadow-2xs border border-gray-100 overflow-hidden">
+      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Cari nama, email, atau telepon..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-gray-50 text-xs border border-gray-200 rounded-xl pl-9 pr-3.5 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0A64BC]"
+            />
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[650px]">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/60">
-                <th className="py-3 px-5">NO</th>
-                <th className="py-3 px-5">NAMA</th>
-                <th className="py-3 px-5">EMAIL</th>
-                <th className="py-3 px-5">NO. TELEPON</th>
-                <th className="py-3 px-5 text-center">TOTAL BOOKING</th>
-                <th className="py-3 px-5 text-center">AKSI</th>
+              <tr className="border-b border-gray-100 text-[11px] font-semibold text-gray-400">
+                <th className="py-3 px-3">NO</th>
+                <th className="py-3 px-3">NAMA</th>
+                <th className="py-3 px-3">EMAIL</th>
+                <th className="py-3 px-3">NO. TELEPON</th>
+                <th className="py-3 px-3 text-center">TOTAL BOOKING</th>
+                <th className="py-3 px-3 text-right">AKSI</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-xs text-gray-700">
+            <tbody className="divide-y divide-gray-50 text-xs">
               {filteredCustomers.length > 0 ? (
-                filteredCustomers.map((customer, index) => (
-                  <tr key={customer.id} className="hover:bg-blue-50/30 transition-colors">
-                    <td className="py-3 px-5 text-gray-400 font-medium">{index + 1}</td>
-                    <td className="py-3 px-5 font-semibold text-gray-800">{customer.name}</td>
-                    <td className="py-3 px-5 text-gray-500">{customer.email}</td>
-                    <td className="py-3 px-5 text-gray-500">{customer.phone}</td>
-                    <td className="py-3 px-5 text-center font-medium">{customer.totalBooking}</td>
-                    <td className="py-3 px-5 text-center">
-                      <div className="flex items-center justify-center gap-2.5">
-                        {/* Eye / View Icon */}
-                        <button className="text-blue-500 hover:text-blue-700 transition-colors cursor-pointer" title="Lihat Detail">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </button>
-                        
-                        {/* Hapus Icon */}
-                        <button
-                          onClick={() => openDeleteModal(customer.id, customer.name)}
-                          className="text-red-500 hover:text-red-700 transition-colors cursor-pointer"
-                          title="Hapus Pelanggan"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
+                filteredCustomers.map((item, idx) => (
+                  <tr key={item.id} className="hover:bg-gray-50/80 transition">
+                    <td className="py-3.5 px-3 text-gray-500 font-medium">{idx + 1}</td>
+                    <td className="py-3.5 px-3 font-bold text-gray-800">{item.nama}</td>
+                    <td className="py-3.5 px-3 text-gray-600">{item.email}</td>
+                    <td className="py-3.5 px-3 text-gray-600">{item.telepon}</td>
+                    <td className="py-3.5 px-3 text-center font-bold text-[#0A64BC]">{item.totalBooking}</td>
+                    <td className="py-3.5 px-3 text-right space-x-1">
+                      {/* Tombol Ikon Mata (Netral Abu-abu) */}
+                      <button
+                        onClick={() => setSelectedCustomer(item)}
+                        title="Lihat Detail & Riwayat Booking"
+                        className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition cursor-pointer inline-flex items-center"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      {/* Tombol Hapus (Netral Abu-abu dengan hover merah) */}
+                      <button
+                        title="Hapus Pelanggan"
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded-lg transition cursor-pointer inline-flex items-center"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-gray-400 text-xs">
-                    Data pelanggan tidak ditemukan.
+                  <td colSpan={6} className="text-center py-6 text-gray-400 text-xs">
+                    Tidak ada data pelanggan yang ditemukan.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-
-        {/* Pagination Footer */}
-        <div className="p-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 bg-gray-50/30">
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`w-7 h-7 rounded-lg text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
-                  currentPage === page
-                    ? 'bg-[#0A64BC] text-white shadow-2xs'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <select className="bg-white border border-gray-200 rounded-lg text-xs text-gray-600 px-2 py-1 focus:outline-none">
-              <option>10 / page</option>
-              <option>20 / page</option>
-              <option>50 / page</option>
-            </select>
-          </div>
-        </div>
       </div>
 
-      {/* MODAL POP-UP KONFIRMASI HAPUS PELANGGAN */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl p-6 text-center space-y-4 animate-in fade-in zoom-in duration-150">
-            {/* Icon Warning Red */}
-            <div className="w-11 h-11 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </div>
-
-            {/* Content Text */}
-            <div className="space-y-1">
-              <h3 className="text-base font-bold text-gray-800">Hapus Data Pelanggan?</h3>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                Apakah Anda yakin ingin menghapus data pelanggan{' '}
-                <span className="font-semibold text-gray-800">
-                  "{selectedCustomerForDelete?.name}"
-                </span>
-                ? Tindakan ini tidak dapat dibatalkan.
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center justify-center gap-3 pt-2">
+      {/* Modal Detail Pelanggan & Riwayat Booking */}
+      {selectedCustomer && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Header Modal */}
+            <div className="bg-[#0A64BC] text-white px-5 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-bold">Detail Pelanggan & Riwayat Booking</h2>
+                <p className="text-[11px] text-blue-100">Informasi lengkap profil dan aktivitas pemesanan.</p>
+              </div>
               <button
-                type="button"
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="w-1/2 py-2 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all cursor-pointer"
+                onClick={() => setSelectedCustomer(null)}
+                className="p-1 rounded-lg hover:bg-white/10 text-white transition cursor-pointer"
               >
-                Batal
+                <X className="w-5 h-5" />
               </button>
+            </div>
+
+            {/* Konten Modal */}
+            <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto text-xs">
+              {/* Informasi Profil */}
+              <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl space-y-2">
+                <p className="text-[10px] font-bold text-gray-400 tracking-wider">PROFIL PELANGGAN</p>
+                <h3 className="font-bold text-gray-800 text-sm">{selectedCustomer.nama}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-gray-600 pt-1">
+                  <p>✉️ Email: <span className="font-medium text-gray-800">{selectedCustomer.email}</span></p>
+                  <p>📞 Telepon: <span className="font-medium text-gray-800">{selectedCustomer.telepon}</span></p>
+                  <p className="col-span-2">🎫 Total Seluruh Pemesanan: <span className="font-bold text-[#0A64BC]">{selectedCustomer.totalBooking} Tiket</span></p>
+                </div>
+              </div>
+
+              {/* Daftar Riwayat Booking */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-gray-400 tracking-wider">RIWAYAT BOOKING TIKET</p>
+                {selectedCustomer.riwayatBooking.length > 0 ? (
+                  <div className="space-y-2">
+                    {selectedCustomer.riwayatBooking.map((booking, index) => (
+                      <div key={index} className="border border-gray-200 p-3.5 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white shadow-2xs">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-[#0A64BC]">{booking.idBooking}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold flex items-center gap-1 ${
+                              booking.status === 'Selesai' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-amber-50 text-amber-600 border border-amber-200'
+                            }`}>
+                              {booking.status === 'Selesai' ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                              {booking.status}
+                            </span>
+                          </div>
+                          <p className="font-bold text-gray-800 text-xs">🚌 {booking.rute}</p>
+                          <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" /> Tanggal: {booking.tanggal}
+                          </p>
+                        </div>
+                        <div className="text-right sm:text-right w-full sm:w-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-100 flex sm:flex-col justify-between items-center sm:items-end">
+                          <span className="text-[10px] text-gray-400">Total Harga</span>
+                          <span className="font-extrabold text-gray-800 text-xs">Rp {booking.totalHarga.toLocaleString('id-ID')}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 bg-gray-50 rounded-xl text-gray-400">
+                    Pelanggan ini belum memiliki riwayat booking.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer Modal */}
+            <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-end">
               <button
-                type="button"
-                onClick={confirmDeleteCustomer}
-                className="w-1/2 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-xs transition-all cursor-pointer"
+                onClick={() => setSelectedCustomer(null)}
+                className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold transition cursor-pointer shadow-2xs"
               >
-                Ya, Hapus
+                Tutup
               </button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }
