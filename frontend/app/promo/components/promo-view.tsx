@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, AlertTriangle } from 'lucide-react';
 
 export interface PromoItem {
   id: string;
@@ -62,6 +62,17 @@ export default function PromoView() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingItem, setEditingItem] = useState<PromoItem | null>(null);
 
+  // State Modal Hapus UI Modern
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    id: string;
+    kodePromo: string;
+  }>({
+    isOpen: false,
+    id: '',
+    kodePromo: '',
+  });
+
   // Form State Tambah Promo
   const [newPromo, setNewPromo] = useState({
     kodePromo: '',
@@ -73,10 +84,39 @@ export default function PromoView() {
     status: 'Aktif' as PromoItem['status'],
   });
 
-  const handleDelete = (id: string, kode: string) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus promo ${kode}?`)) {
-      setPromos(promos.filter((p) => p.id !== id));
+  // Handler Validasi Nama Promo (Hanya Huruf & Spasi)
+  const handleNameChange = (val: string, isEdit = false) => {
+    const cleanValue = val.replace(/[^a-zA-Z\s]/g, '');
+    if (isEdit && editingItem) {
+      setEditingItem({ ...editingItem, namaPromo: cleanValue });
+    } else {
+      setNewPromo({ ...newPromo, namaPromo: cleanValue });
     }
+  };
+
+  // Handler Validasi Besaran Diskon (Hanya Angka, %, R, p, titik, spasi)
+  const handleDiskonChange = (val: string, isEdit = false) => {
+    const cleanValue = val.replace(/[^0-9%Rp\s.]/gi, '');
+    if (isEdit && editingItem) {
+      setEditingItem({ ...editingItem, diskon: cleanValue });
+    } else {
+      setNewPromo({ ...newPromo, diskon: cleanValue });
+    }
+  };
+
+  // Handler Trigger Modal Hapus
+  const handleDeleteClick = (id: string, kodePromo: string) => {
+    setDeleteModal({
+      isOpen: true,
+      id,
+      kodePromo,
+    });
+  };
+
+  // Eksekusi Hapus Promo
+  const confirmDelete = () => {
+    setPromos(promos.filter((p) => p.id !== deleteModal.id));
+    setDeleteModal({ isOpen: false, id: '', kodePromo: '' });
   };
 
   const handleAddPromo = (e: React.FormEvent) => {
@@ -189,7 +229,7 @@ export default function PromoView() {
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(item.id, item.kodePromo)}
+                        onClick={() => handleDeleteClick(item.id, item.kodePromo)}
                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
                         title="Hapus Promo"
                       >
@@ -215,11 +255,12 @@ export default function PromoView() {
                 <input
                   type="text"
                   value={newPromo.kodePromo}
-                  onChange={(e) => setNewPromo({ ...newPromo, kodePromo: e.target.value })}
+                  onChange={(e) => setNewPromo({ ...newPromo, kodePromo: e.target.value.toUpperCase() })}
                   placeholder="Contoh: LIBURANSERU"
                   required
                   className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] uppercase"
                 />
+                <p className="text-[10px] text-gray-400 mt-1">* Otomatis terkonversi ke huruf kapital.</p>
               </div>
 
               <div>
@@ -227,11 +268,12 @@ export default function PromoView() {
                 <input
                   type="text"
                   value={newPromo.namaPromo}
-                  onChange={(e) => setNewPromo({ ...newPromo, namaPromo: e.target.value })}
+                  onChange={(e) => handleNameChange(e.target.value)}
                   placeholder="Contoh: Diskon Akhir Tahun"
                   required
                   className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                 />
+                <p className="text-[10px] text-gray-400 mt-1">* Hanya dapat diisi huruf dan spasi.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -240,11 +282,12 @@ export default function PromoView() {
                   <input
                     type="text"
                     value={newPromo.diskon}
-                    onChange={(e) => setNewPromo({ ...newPromo, diskon: e.target.value })}
-                    placeholder="20% / Rp 20.000"
+                    onChange={(e) => handleDiskonChange(e.target.value)}
+                    placeholder="Contoh: 20% / Rp 20.000"
                     required
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   />
+                  <p className="text-[10px] text-gray-400 mt-1">* Isi persentase (%) atau nominal rupiah (Rp).</p>
                 </div>
                 <div>
                   <label className="block text-gray-600 font-semibold mb-1">Status</label>
@@ -324,9 +367,10 @@ export default function PromoView() {
                 <input
                   type="text"
                   value={editingItem.namaPromo}
-                  onChange={(e) => setEditingItem({ ...editingItem, namaPromo: e.target.value })}
+                  onChange={(e) => handleNameChange(e.target.value, true)}
                   className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                 />
+                <p className="text-[10px] text-gray-400 mt-1">* Hanya dapat diisi huruf dan spasi.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -335,9 +379,10 @@ export default function PromoView() {
                   <input
                     type="text"
                     value={editingItem.diskon}
-                    onChange={(e) => setEditingItem({ ...editingItem, diskon: e.target.value })}
+                    onChange={(e) => handleDiskonChange(e.target.value, true)}
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   />
+                  <p className="text-[10px] text-gray-400 mt-1">* Isi persentase (%) atau nominal rupiah (Rp).</p>
                 </div>
                 <div>
                   <label className="block text-gray-600 font-semibold mb-1">Status</label>
@@ -391,6 +436,39 @@ export default function PromoView() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus UI Modern */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl w-full max-w-sm text-center space-y-4 shadow-xl border border-gray-100">
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-gray-800">Hapus Promo?</h3>
+              <p className="text-xs text-gray-500">
+                Apakah Anda yakin ingin menghapus kode promo <strong>"{deleteModal.kodePromo}"</strong>? Tindakan ini tidak dapat dibatalkan.
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteModal({ isOpen: false, id: '', kodePromo: '' })}
+                className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-xs transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-xs transition cursor-pointer shadow-xs"
+              >
+                Ya, Hapus
+              </button>
+            </div>
           </div>
         </div>
       )}
