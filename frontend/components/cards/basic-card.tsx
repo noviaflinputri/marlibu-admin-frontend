@@ -1,4 +1,4 @@
-import { Button } from "@/app/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 /**
  * A plain, fully-editable card block — no CardHeader/CardTitle/CardContent

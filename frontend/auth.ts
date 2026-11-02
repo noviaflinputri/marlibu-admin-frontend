@@ -8,6 +8,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: {
+          prompt: 'select_account', // Memaksa Google selalu menampilkan layar pilih akun
+          access_type: 'offline',
+          response_type: 'code',
+        },
+      },
     }),
 
     // 2. Credentials Provider (Login Manual Email & Password)
@@ -18,7 +25,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (credentials?.email === 'admin@marlibu.com' && credentials?.password === 'admin123') {
+        // Konversi email input menjadi huruf kecil semua sebelum dibandingkan
+        const inputEmail = (credentials?.email as string)?.toLowerCase();
+
+        if (inputEmail === 'admin@marlibu.com' && credentials?.password === 'admin123') {
           return { id: '1', name: 'Admin Marlibu', email: 'admin@marlibu.com', role: 'admin' };
         }
         return null;

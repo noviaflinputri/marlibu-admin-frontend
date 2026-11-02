@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export function middleware() {
+export function proxy() {
   // Bolehkan semua halaman diakses tanpa me-redirect ke login
   return NextResponse.next();
 }
