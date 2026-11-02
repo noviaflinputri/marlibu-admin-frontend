@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Eye, Trash2 } from 'lucide-react';
+import { Eye, Trash2, AlertTriangle } from 'lucide-react';
 
 export interface BookingItem {
   no: number;
@@ -80,6 +80,17 @@ export default function BookingView() {
   const [bookings, setBookings] = useState<BookingItem[]>(initialBookings);
   const [isAdding, setIsAdding] = useState(false);
 
+  // State untuk Modal Hapus Modern UI
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    kodeBooking: string;
+    namaPelanggan: string;
+  }>({
+    isOpen: false,
+    kodeBooking: '',
+    namaPelanggan: '',
+  });
+
   // State untuk Filter & Search Input
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRute, setSelectedRute] = useState('Semua Rute');
@@ -95,6 +106,32 @@ export default function BookingView() {
     totalHarga: 'Rp 150.000',
     status: 'Dikonfirmasi' as BookingItem['status'],
   });
+
+  // Handler Validasi Input Nama (Hanya Huruf & Spasi)
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cleanValue = value.replace(/[^a-zA-Z\s]/g, '');
+    setNewBooking({ ...newBooking, namaPelanggan: cleanValue });
+  };
+
+  // Handler Validasi Input Harga (Hanya Angka & Otomatis Format Rupiah)
+  const handleHargaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const rawNumber = value.replace(/\D/g, '');
+
+    if (!rawNumber) {
+      setNewBooking({ ...newBooking, totalHarga: '' });
+      return;
+    }
+
+    const formatted = new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0,
+    }).format(Number(rawNumber));
+
+    setNewBooking({ ...newBooking, totalHarga: formatted });
+  };
 
   // Logika Pemfilteran Data
   const filteredBookings = bookings.filter((item) => {
@@ -115,11 +152,19 @@ export default function BookingView() {
     return matchQuery && matchRute && matchStatus && matchDate;
   });
 
-  // Function Hapus Booking
-  const handleDelete = (kode: string) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus booking ${kode}?`)) {
-      setBookings(bookings.filter((item) => item.kodeBooking !== kode));
-    }
+  // Function Trigger Modal Hapus
+  const handleDeleteClick = (kodeBooking: string, namaPelanggan: string) => {
+    setDeleteModal({
+      isOpen: true,
+      kodeBooking,
+      namaPelanggan,
+    });
+  };
+
+  // Function Eksekusi Hapus Data
+  const confirmDelete = () => {
+    setBookings(bookings.filter((item) => item.kodeBooking !== deleteModal.kodeBooking));
+    setDeleteModal({ isOpen: false, kodeBooking: '', namaPelanggan: '' });
   };
 
   // Function Tambah Booking Baru
@@ -292,7 +337,7 @@ export default function BookingView() {
                           <Eye className="w-4 h-4" />
                         </Link>
                         <button
-                          onClick={() => handleDelete(item.kodeBooking)}
+                          onClick={() => handleDeleteClick(item.kodeBooking, item.namaPelanggan)}
                           className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer"
                           title="Hapus Booking"
                         >
@@ -325,11 +370,12 @@ export default function BookingView() {
                 <input
                   type="text"
                   value={newBooking.namaPelanggan}
-                  onChange={(e) => setNewBooking({ ...newBooking, namaPelanggan: e.target.value })}
+                  onChange={handleNameChange}
                   placeholder="Contoh: Andi Pratama"
                   required
                   className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                 />
+                <p className="text-[10px] text-gray-400 mt-1">* Hanya dapat diisi huruf dan spasi.</p>
               </div>
 
               <div>
@@ -376,12 +422,14 @@ export default function BookingView() {
                   <label className="block text-gray-600 font-semibold mb-1">Total Harga</label>
                   <input
                     type="text"
+                    inputMode="numeric"
                     value={newBooking.totalHarga}
-                    onChange={(e) => setNewBooking({ ...newBooking, totalHarga: e.target.value })}
-                    placeholder="Rp 150.000"
+                    onChange={handleHargaChange}
+                    placeholder="Contoh: 150000"
                     required
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   />
+                  <p className="text-[10px] text-gray-400 mt-1">* Masukkan angka saja (otomatis ke format Rp).</p>
                 </div>
                 <div>
                   <label className="block text-gray-600 font-semibold mb-1">Status</label>
@@ -414,6 +462,39 @@ export default function BookingView() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus UI Modern */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl w-full max-w-sm text-center space-y-4 shadow-xl border border-gray-100">
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-gray-800">Hapus Data Booking?</h3>
+              <p className="text-xs text-gray-500">
+                Apakah Anda yakin ingin menghapus data booking <strong>"{deleteModal.kodeBooking}"</strong> ({deleteModal.namaPelanggan})? Tindakan ini tidak dapat dibatalkan.
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteModal({ isOpen: false, kodeBooking: '', namaPelanggan: '' })}
+                className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-xs transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-xs transition cursor-pointer shadow-xs"
+              >
+                Ya, Hapus
+              </button>
+            </div>
           </div>
         </div>
       )}
