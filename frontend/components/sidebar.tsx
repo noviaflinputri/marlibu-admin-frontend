@@ -19,10 +19,12 @@ import {
   RefreshCcw,
   PanelLeftClose,
   PanelLeftOpen,
+  ChevronDown,
+  ChevronUp,
   X
 } from 'lucide-react';
 
-const menuGroups = [
+const initialMenuGroups = [
   {
     title: 'Utama',
     items: [
@@ -71,6 +73,20 @@ export default function Sidebar({
   const pathname = usePathname();
   const [imgError, setImgError] = useState(false);
 
+  const [openGroups, setOpenGroups] = useState<{ [key: string]: boolean }>({
+    'Utama': true,
+    'Operasional': true,
+    'Keuangan & Analisis': true,
+    'Sistem': true,
+  });
+
+  const toggleGroup = (title: string) => {
+    setOpenGroups(prev => ({
+      ...prev,
+      [title]: !prev[title]
+    }));
+  };
+
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/login' });
   };
@@ -79,7 +95,6 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Overlay Gelap Mobile & Tablet */}
       {isMobileOpen && (
         <div 
           onClick={onMobileClose}
@@ -94,7 +109,6 @@ export default function Sidebar({
           showExpanded ? 'w-64 p-4' : 'w-20 p-3 items-center'
         }`}
       >
-        {/* Tombol Silang (Close Mobile & Tablet) */}
         <button
           onClick={onMobileClose}
           type="button"
@@ -104,90 +118,118 @@ export default function Sidebar({
           <X className="w-5 h-5" />
         </button>
 
-        {/* Tombol Toggle Collapse Desktop */}
-        {onToggle && (
-          <button
-            onClick={onToggle}
-            type="button"
-            title={isOpen ? 'Tutup Sidebar' : 'Buka Sidebar'}
-            className={`hidden lg:block absolute top-14 z-50 p-1 text-white hover:text-blue-200 hover:scale-110 transition-all cursor-pointer ${
-              isOpen ? 'right-3' : 'right-2.5'
-            }`}
-          >
-            {isOpen ? <PanelLeftClose className="w-6 h-6" /> : <PanelLeftOpen className="w-6 h-6" />}
-          </button>
-        )}
+        <div className={`w-full flex items-center mb-3.5 shrink-0 ${showExpanded ? 'justify-between px-1' : 'justify-center'}`}>
+          {showExpanded ? (
+            <>
+              <div className="flex items-center gap-3 min-w-0">
+                {!imgError ? (
+                  <img
+                    src="/logo.png"
+                    alt="Marlibu Logo"
+                    className="w-10 h-10 md:w-11 md:h-11 shrink-0 object-contain drop-shadow"
+                    onError={() => setImgError(true)}
+                  />
+                ) : (
+                  <Compass className="w-10 h-10 md:w-11 md:h-11 shrink-0 text-white" />
+                )}
 
-        {/* Header & Logo */}
-        <div className={`flex items-center mb-3.5 shrink-0 ${showExpanded ? 'gap-2.5 px-0.5 pr-8 lg:pr-0' : 'justify-center'}`}>
-          {!imgError ? (
-            <img
-              src="/logo.png"
-              alt="Marlibu Logo"
-              className="w-10 h-10 md:w-[48px] md:h-[48px] shrink-0 object-contain drop-shadow"
-              onError={() => setImgError(true)}
-            />
+                <div className="flex flex-col min-w-0">
+                  <h1 className="font-extrabold text-xs tracking-tight text-white leading-snug truncate">
+                    Marlibu Tour & Travel
+                  </h1>
+                  <p className="text-[10px] text-blue-200 font-semibold tracking-wider uppercase opacity-90 mt-0.5">
+                    Admin Panel
+                  </p>
+                </div>
+              </div>
+
+              {onToggle && (
+                <button
+                  onClick={onToggle}
+                  type="button"
+                  title="Tutup Sidebar"
+                  className="text-white hover:text-blue-200 transition-all cursor-pointer p-1 shrink-0"
+                >
+                  <PanelLeftClose className="w-5 h-5" />
+                </button>
+              )}
+            </>
           ) : (
-            <Compass className="w-10 h-10 md:w-11 md:h-11 shrink-0 text-white" />
-          )}
-
-          {showExpanded && (
-            <div className="flex-1 min-w-0">
-              <h1 className="font-extrabold text-[13px] tracking-tight text-white leading-tight">
-                Marlibu Tour & Travel
-              </h1>
-              <p className="text-[10px] text-blue-200 font-semibold tracking-wider uppercase opacity-90 mt-0.5 whitespace-nowrap">
-                Admin Panel
-              </p>
+            <div className="w-full flex justify-center py-2.5">
+              {onToggle && (
+                <button
+                  onClick={onToggle}
+                  type="button"
+                  title="Buka Sidebar"
+                  className="text-blue-100 hover:text-white transition-all cursor-pointer p-0"
+                >
+                  <PanelLeftOpen className="w-5 h-5" />
+                </button>
+              )}
             </div>
           )}
         </div>
 
         <div className="border-b border-white/25 my-2.5 shrink-0 w-full" />
 
-        {/* Menu Navigasi (Compact) */}
         <div className="w-full flex flex-col pt-1 shrink-0">
-          <nav className="space-y-4 w-full">
-            {menuGroups.map((group, index) => (
-              <div key={index} className="space-y-1">
-                {showExpanded ? (
-                  <h2 className="text-[10px] font-bold text-blue-200 uppercase tracking-wider px-3 mb-1 opacity-80">
-                    {group.title}
-                  </h2>
-                ) : (
-                  <div className="border-t border-white/10 my-2 w-full" />
-                )}
+          <nav className="space-y-3 w-full">
+            {initialMenuGroups.map((group, index) => {
+              const isGroupOpen = openGroups[group.title] ?? true;
 
-                {group.items.map((item) => {
-                  const isActive =
-                    pathname === item.href ||
-                    (item.href !== '/dashboard' && pathname.startsWith(item.href));
-
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={onMobileClose}
-                      title={!showExpanded ? item.name : undefined}
-                      className={`flex items-center font-medium rounded-xl transition-all text-xs py-2.5 ${
-                        showExpanded ? 'gap-3 px-3.5' : 'justify-center px-0'
-                      } ${
-                        isActive
-                          ? 'bg-white text-[#0A64BC] font-semibold shadow-md translate-x-0.5'
-                          : 'text-blue-100 hover:bg-white/10 hover:text-white'
-                      }`}
+              return (
+                <div key={index} className="space-y-1">
+                  {showExpanded ? (
+                    <button
+                      onClick={() => toggleGroup(group.title)}
+                      type="button"
+                      className="w-full flex items-center justify-between text-[10px] font-bold text-blue-200 uppercase tracking-wider px-3 py-1 hover:text-white transition cursor-pointer rounded-lg hover:bg-white/5"
                     >
-                      {item.icon}
-                      {showExpanded && <span className="whitespace-nowrap">{item.name}</span>}
-                    </Link>
-                  );
-                })}
-              </div>
-            ))}
+                      <span>{group.title}</span>
+                      {isGroupOpen ? (
+                        <ChevronUp className="w-3.5 h-3.5 opacity-70" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                      )}
+                    </button>
+                  ) : (
+                    <div className="border-t border-white/10 my-2 w-full" />
+                  )}
+
+                  {(isGroupOpen || !showExpanded) && (
+                    <div className="space-y-1">
+                      {group.items.map((item) => {
+                        const isActive =
+                          pathname === item.href ||
+                          (item.href !== '/dashboard' && pathname.startsWith(item.href));
+
+                        return (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            onClick={onMobileClose}
+                            title={!showExpanded ? item.name : undefined}
+                            className={`flex items-center font-medium rounded-xl transition-all text-xs py-2.5 ${
+                              showExpanded ? 'gap-3 px-3.5' : 'justify-center px-0'
+                            } ${
+                              isActive
+                                ? 'bg-white text-[#0A64BC] font-semibold shadow-md translate-x-0.5'
+                                : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                            }`}
+                          >
+                            {item.icon}
+                            {showExpanded && <span className="whitespace-nowrap">{item.name}</span>}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </nav>
         </div>
 
-        {/* Footer Profile Langsung Nempel di Bawah Menu */}
         <div className={`pt-3 mt-3 border-t border-white/25 shrink-0 space-y-2 bg-[#084C8D]/40 rounded-xl p-2 ${showExpanded ? 'w-full' : 'w-full flex flex-col items-center'}`}>
           <div className={`flex items-center ${showExpanded ? 'gap-2.5 px-1' : 'justify-center'}`}>
             <div className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center font-bold text-xs shrink-0 shadow-inner">
