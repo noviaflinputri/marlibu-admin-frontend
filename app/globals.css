@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@import "../styles/cmlabs-theme.css";
+
+body, 
+main, 
+.bg-gray-50, 
+div[class*="bg-gray-50"] {
+  background-color: #ffffff !important;
+}
+
+/* Memastikan input & filter di dalam halaman ikut putih */
+input, select {
+  background-color: #ffffff !important;
+}
