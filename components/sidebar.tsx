@@ -103,10 +103,10 @@ export default function Sidebar({
       )}
 
       <aside
-        className={`bg-gradient-to-b from-[#0A64BC] to-[#084C8D] text-white shrink-0 flex flex-col transition-all duration-300 z-50 fixed lg:static inset-y-0 left-0 max-h-screen overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${
+        className={`bg-gradient-to-b from-[#0A64BC] to-[#084C8D] text-white shrink-0 flex flex-col justify-between h-screen transition-all duration-300 z-50 fixed lg:static inset-y-0 left-0 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } ${
-          showExpanded ? 'w-64 p-4' : 'w-20 p-3 items-center'
+          showExpanded ? 'w-64 p-4 pr-2' : 'w-20 p-3 items-center'
         }`}
       >
         <button
@@ -118,61 +118,69 @@ export default function Sidebar({
           <X className="w-5 h-5" />
         </button>
 
-        <div className={`w-full flex items-center mb-3.5 shrink-0 ${showExpanded ? 'justify-between px-1' : 'justify-center'}`}>
-          {showExpanded ? (
-            <>
-              <div className="flex items-center gap-3 min-w-0">
-                {!imgError ? (
-                  <img
-                    src="/logo.png"
-                    alt="Marlibu Logo"
-                    className="w-10 h-10 md:w-11 md:h-11 shrink-0 object-contain drop-shadow"
-                    onError={() => setImgError(true)}
-                  />
-                ) : (
-                  <Compass className="w-10 h-10 md:w-11 md:h-11 shrink-0 text-white" />
-                )}
+        {/* 1. BAGIAN ATAS: Header Sidebar (Dipertahankan diam di atas) */}
+        <div className="w-full shrink-0 pb-3 border-b border-white/20">
+          <div className={`w-full flex items-center ${showExpanded ? 'justify-between px-1' : 'justify-center'}`}>
+            {showExpanded ? (
+              <>
+                <div className="flex items-center gap-3 min-w-0">
+                  {!imgError ? (
+                    <img
+                      src="/logo.png"
+                      alt="Marlibu Logo"
+                      className="w-10 h-10 md:w-11 md:h-11 shrink-0 object-contain drop-shadow"
+                      onError={() => setImgError(true)}
+                    />
+                  ) : (
+                    <Compass className="w-10 h-10 md:w-11 md:h-11 shrink-0 text-white" />
+                  )}
 
-                <div className="flex flex-col min-w-0">
-                  <h1 className="font-extrabold text-xs tracking-tight text-white leading-snug truncate">
-                    Marlibu Tour & Travel
-                  </h1>
-                  <p className="text-[10px] text-blue-200 font-semibold tracking-wider uppercase opacity-90 mt-0.5">
-                    Admin Panel
-                  </p>
+                  <div className="flex flex-col min-w-0">
+                    <h1 className="font-extrabold text-xs tracking-tight text-white leading-snug truncate">
+                      Marlibu Tour & Travel
+                    </h1>
+                    <p className="text-[10px] text-blue-200 font-semibold tracking-wider uppercase opacity-90 mt-0.5">
+                      Admin Panel
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {onToggle && (
-                <button
-                  onClick={onToggle}
-                  type="button"
-                  title="Tutup Sidebar"
-                  className="text-white hover:text-blue-200 transition-all cursor-pointer p-1 shrink-0"
-                >
-                  <PanelLeftClose className="w-5 h-5" />
-                </button>
-              )}
-            </>
-          ) : (
-            <div className="w-full flex justify-center py-2.5">
-              {onToggle && (
-                <button
-                  onClick={onToggle}
-                  type="button"
-                  title="Buka Sidebar"
-                  className="text-blue-100 hover:text-white transition-all cursor-pointer p-0"
-                >
-                  <PanelLeftOpen className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-          )}
+                {onToggle && (
+                  <button
+                    onClick={onToggle}
+                    type="button"
+                    title="Tutup Sidebar"
+                    className="text-white hover:text-blue-200 transition-all cursor-pointer p-1 shrink-0"
+                  >
+                    <PanelLeftClose className="w-5 h-5" />
+                  </button>
+                )}
+              </>
+            ) : (
+              <div className="w-full flex justify-center py-1">
+                {onToggle && (
+                  <button
+                    onClick={onToggle}
+                    type="button"
+                    title="Buka Sidebar"
+                    className="text-blue-100 hover:text-white transition-all cursor-pointer p-0"
+                  >
+                    <PanelLeftOpen className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="border-b border-white/25 my-2.5 shrink-0 w-full" />
-
-        <div className="w-full flex flex-col pt-1 shrink-0">
+        {/* 2. BAGIAN TENGAH: Navigasi Menu (Bisa di-scroll jika menu panjang) */}
+        <div className="w-full flex-1 overflow-y-auto py-3 pr-1.5 
+          [&::-webkit-scrollbar]:w-1.5 
+          [&::-webkit-scrollbar-track]:bg-transparent 
+          [&::-webkit-scrollbar-thumb]:bg-white/20 
+          [&::-webkit-scrollbar-thumb]:rounded-full 
+          hover:[&::-webkit-scrollbar-thumb]:bg-white/40">
+          
           <nav className="space-y-3 w-full">
             {initialMenuGroups.map((group, index) => {
               const isGroupOpen = openGroups[group.title] ?? true;
@@ -193,7 +201,7 @@ export default function Sidebar({
                       )}
                     </button>
                   ) : (
-                    <div className="border-t border-white/10 my-2 w-full" />
+                    <div className="my-2 w-full" />
                   )}
 
                   {(isGroupOpen || !showExpanded) && (
@@ -230,30 +238,33 @@ export default function Sidebar({
           </nav>
         </div>
 
-        <div className={`pt-3 mt-3 border-t border-white/25 shrink-0 space-y-2 bg-[#084C8D]/40 rounded-xl p-2 ${showExpanded ? 'w-full' : 'w-full flex flex-col items-center'}`}>
-          <div className={`flex items-center ${showExpanded ? 'gap-2.5 px-1' : 'justify-center'}`}>
-            <div className="w-8 h-8 rounded-full bg-white/20 border border-white/30 flex items-center justify-center font-bold text-xs shrink-0 shadow-inner">
-              AD
-            </div>
-            {showExpanded && (
-              <div className="text-xs whitespace-nowrap overflow-hidden">
-                <p className="font-semibold text-white leading-tight">Admin</p>
-                <p className="text-[10px] text-blue-200 truncate">admin@marlibu.com</p>
+        {/* 3. BAGIAN BAWAH: Card Profil Admin & Logout (Dipertahankan dengan garis lurus di atasnya) */}
+        <div className="w-full shrink-0 pt-3 border-t border-white/20 mt-auto">
+          <div className={`bg-[#084C8D]/70 border border-white/20 rounded-2xl p-3.5 ${showExpanded ? 'w-full space-y-3' : 'w-full flex flex-col items-center gap-3'}`}>
+            <div className={`flex items-center ${showExpanded ? 'gap-3' : 'justify-center'}`}>
+              <div className="w-9 h-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center font-bold text-xs shrink-0 text-white shadow-inner">
+                AD
               </div>
-            )}
-          </div>
+              {showExpanded && (
+                <div className="text-xs whitespace-nowrap overflow-hidden">
+                  <p className="font-semibold text-white leading-tight">Admin</p>
+                  <p className="text-[10px] text-blue-200 truncate mt-0.5">admin@marlibu.com</p>
+                </div>
+              )}
+            </div>
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            title={!showExpanded ? "Logout" : undefined}
-            className={`w-full flex items-center font-medium rounded-lg transition-all text-xs py-1.5 text-blue-100 hover:bg-red-500/80 hover:text-white cursor-pointer ${
-              showExpanded ? 'gap-2 px-2' : 'justify-center px-0'
-            }`}
-          >
-            <LogOut className="w-4 h-4 shrink-0" />
-            {showExpanded && <span>Logout</span>}
-          </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              title={!showExpanded ? "Logout" : undefined}
+              className={`w-full flex items-center font-medium transition-all text-xs text-white/90 hover:text-white cursor-pointer ${
+                showExpanded ? 'gap-2.5 px-0.5' : 'justify-center px-0'
+              }`}
+            >
+              <LogOut className="w-4.5 h-4.5 shrink-0" />
+              {showExpanded && <span>Logout</span>}
+            </button>
+          </div>
         </div>
       </aside>
     </>
