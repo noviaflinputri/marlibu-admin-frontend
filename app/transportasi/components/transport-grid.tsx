@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, AlertTriangle } from 'lucide-react';
 
 export interface TransportItem {
   no: number;
@@ -62,6 +62,19 @@ export default function TransportGrid() {
   const [mobilOptions, setMobilOptions] = useState(initialMobilOptions);
   const [isAdding, setIsAdding] = useState(false);
   const [editingItem, setEditingItem] = useState<TransportItem | null>(null);
+
+  // State untuk Modal Hapus Modern UI
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    no: number;
+    platNomor: string;
+    unitMobil: string;
+  }>({
+    isOpen: false,
+    no: 0,
+    platNomor: '',
+    unitMobil: '',
+  });
 
   // Form State Tambah Armada (Plat Nomor Terpisah)
   const [platDepan, setPlatDepan] = useState('');
@@ -129,11 +142,20 @@ export default function TransportGrid() {
     }));
   };
 
-  // Hapus Armada
-  const handleDelete = (no: number, plat: string) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus armada dengan Plat ${plat}?`)) {
-      setTransports(transports.filter((item) => item.no !== no));
-    }
+  // Function Trigger Modal Hapus
+  const handleDeleteClick = (no: number, platNomor: string, unitMobil: string) => {
+    setDeleteModal({
+      isOpen: true,
+      no,
+      platNomor,
+      unitMobil,
+    });
+  };
+
+  // Function Eksekusi Hapus Data
+  const confirmDelete = () => {
+    setTransports(transports.filter((item) => item.no !== deleteModal.no));
+    setDeleteModal({ isOpen: false, no: 0, platNomor: '', unitMobil: '' });
   };
 
   // Tambah Armada Baru
@@ -245,7 +267,7 @@ export default function TransportGrid() {
   };
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full font-sans bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full font-sans bg-white min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -265,21 +287,21 @@ export default function TransportGrid() {
         </button>
       </div>
 
-      {/* Tabel Armada */}
+      {/* Tabel Armada - Header Hitam Bold Capslock (Uppercase) */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs whitespace-nowrap">
-            <thead className="bg-gray-50 text-gray-400 font-semibold border-b border-gray-100">
+            <thead className="bg-white border-b border-gray-100">
               <tr>
-                <th className="py-3.5 px-4 w-12 text-center">No</th>
-                <th className="py-3.5 px-4">Plat Nomor</th>
-                <th className="py-3.5 px-4">Unit Mobil</th>
-                <th className="py-3.5 px-4">Kapasitas</th>
-                <th className="py-3.5 px-4 text-center">Status</th>
-                <th className="py-3.5 px-4 text-center w-28">Aksi</th>
+                <th className="py-3.5 px-4 w-12 text-center text-gray-900 font-bold uppercase tracking-wider">NO</th>
+                <th className="py-3.5 px-4 text-gray-900 font-bold uppercase tracking-wider">PLAT NOMOR</th>
+                <th className="py-3.5 px-4 text-gray-900 font-bold uppercase tracking-wider">UNIT MOBIL</th>
+                <th className="py-3.5 px-4 text-gray-900 font-bold uppercase tracking-wider">KAPASITAS</th>
+                <th className="py-3.5 px-4 text-center text-gray-900 font-bold uppercase tracking-wider">STATUS</th>
+                <th className="py-3.5 px-4 text-center w-28 text-gray-900 font-bold uppercase tracking-wider">AKSI</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-gray-700">
+            <tbody className="divide-y divide-gray-100 text-gray-700 bg-white">
               {transports.map((item) => (
                 <tr key={item.no} className="hover:bg-gray-50/60 transition">
                   <td className="py-3.5 px-4 text-center text-gray-400 font-medium">{item.no}</td>
@@ -301,7 +323,7 @@ export default function TransportGrid() {
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(item.no, item.platNomor)}
+                        onClick={() => handleDeleteClick(item.no, item.platNomor, item.unitMobil)}
                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
                         title="Hapus Armada"
                       >
@@ -322,8 +344,6 @@ export default function TransportGrid() {
           <div className="bg-white p-6 rounded-3xl w-full max-w-md space-y-4 shadow-xl text-xs">
             <h3 className="text-base font-bold text-gray-800">Tambah Armada Baru</h3>
             <form onSubmit={handleAddTransport} className="space-y-3">
-              
-              {/* Input Plat Nomor (3 Kolom Terpisah: Kode Depan, Angka, Kode Belakang) */}
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">
                   Plat Nomor <span className="text-[10px] text-gray-400 font-normal">*(Depan - Angka - Belakang)*</span>
@@ -336,7 +356,7 @@ export default function TransportGrid() {
                     onChange={(e) => handlePlatDepan(e.target.value)}
                     placeholder="B"
                     required
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-center uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-center uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   />
                   <input
                     type="text"
@@ -345,7 +365,7 @@ export default function TransportGrid() {
                     onChange={(e) => handlePlatAngka(e.target.value)}
                     placeholder="1234"
                     required
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-center font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-center font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   />
                   <input
                     type="text"
@@ -354,7 +374,7 @@ export default function TransportGrid() {
                     onChange={(e) => handlePlatBelakang(e.target.value)}
                     placeholder="KZ"
                     required
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-center uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-center uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   />
                 </div>
                 {(platErrors.depan || platErrors.angka || platErrors.belakang) && (
@@ -364,7 +384,6 @@ export default function TransportGrid() {
                 )}
               </div>
 
-              {/* Unit Mobil (+ Opsi Tambah Unit Baru) */}
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Unit Mobil</label>
                 <select
@@ -380,7 +399,7 @@ export default function TransportGrid() {
                       if (matched && !isCustomKapasitas) setKapasitas(matched.kapasitas);
                     }
                   }}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                 >
                   {mobilOptions.map((item) => (
                     <option key={item.unit} value={item.unit}>
@@ -404,7 +423,6 @@ export default function TransportGrid() {
                 )}
               </div>
 
-              {/* Kapasitas (+ Opsi Kapasitas Bebas) */}
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Kapasitas</label>
                 <select
@@ -418,7 +436,7 @@ export default function TransportGrid() {
                       setKapasitas(val);
                     }
                   }}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                 >
                   <option value="6 Penumpang">6 Penumpang</option>
                   <option value="7 Penumpang">7 Penumpang</option>
@@ -446,13 +464,12 @@ export default function TransportGrid() {
                 )}
               </div>
 
-              {/* Status Operasional */}
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Status Operasional</label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as TransportItem['status'])}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                 >
                   <option value="Tersedia">Tersedia</option>
                   <option value="Dalam Perjalanan">Dalam Perjalanan</option>
@@ -486,8 +503,6 @@ export default function TransportGrid() {
           <div className="bg-white p-6 rounded-3xl w-full max-w-md space-y-4 shadow-xl text-xs">
             <h3 className="text-base font-bold text-gray-800">Edit Armada (No. {editingItem.no})</h3>
             <form onSubmit={handleSaveEdit} className="space-y-3">
-              
-              {/* Input Plat Nomor (Edit Modal) */}
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">
                   Plat Nomor <span className="text-[10px] text-gray-400 font-normal">*(Depan - Angka - Belakang)*</span>
@@ -499,7 +514,7 @@ export default function TransportGrid() {
                     value={platDepan}
                     onChange={(e) => handlePlatDepan(e.target.value)}
                     required
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-center uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-center uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   />
                   <input
                     type="text"
@@ -507,7 +522,7 @@ export default function TransportGrid() {
                     value={platAngka}
                     onChange={(e) => handlePlatAngka(e.target.value)}
                     required
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-center font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-center font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   />
                   <input
                     type="text"
@@ -515,7 +530,7 @@ export default function TransportGrid() {
                     value={platBelakang}
                     onChange={(e) => handlePlatBelakang(e.target.value)}
                     required
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-center uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-center uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   />
                 </div>
                 {(platErrors.depan || platErrors.angka || platErrors.belakang) && (
@@ -525,7 +540,6 @@ export default function TransportGrid() {
                 )}
               </div>
 
-              {/* Unit Mobil (Edit Modal) */}
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Unit Mobil</label>
                 <select
@@ -541,7 +555,7 @@ export default function TransportGrid() {
                       if (matched && !isCustomKapasitas) setKapasitas(matched.kapasitas);
                     }
                   }}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                 >
                   {mobilOptions.map((item) => (
                     <option key={item.unit} value={item.unit}>
@@ -565,7 +579,6 @@ export default function TransportGrid() {
                 )}
               </div>
 
-              {/* Kapasitas (Edit Modal) */}
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Kapasitas</label>
                 <select
@@ -579,7 +592,7 @@ export default function TransportGrid() {
                       setKapasitas(val);
                     }
                   }}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                 >
                   <option value="6 Penumpang">6 Penumpang</option>
                   <option value="7 Penumpang">7 Penumpang</option>
@@ -607,13 +620,12 @@ export default function TransportGrid() {
                 )}
               </div>
 
-              {/* Status Operasional (Edit Modal) */}
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Status Operasional</label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as TransportItem['status'])}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                 >
                   <option value="Tersedia">Tersedia</option>
                   <option value="Dalam Perjalanan">Dalam Perjalanan</option>
@@ -637,6 +649,39 @@ export default function TransportGrid() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus UI Modern */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl w-full max-w-sm text-center space-y-4 shadow-xl border border-gray-100">
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-gray-800">Hapus Data Armada?</h3>
+              <p className="text-xs text-gray-500">
+                Apakah Anda yakin ingin menghapus armada dengan Plat <strong>"{deleteModal.platNomor}"</strong> ({deleteModal.unitMobil})? Tindakan ini tidak dapat dibatalkan.
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteModal({ isOpen: false, no: 0, platNomor: '', unitMobil: '' })}
+                className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-xs transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-xs transition cursor-pointer shadow-xs"
+              >
+                Ya, Hapus
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -212,7 +212,7 @@ export default function BookingView() {
   };
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full font-sans bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full font-sans bg-white min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -237,14 +237,14 @@ export default function BookingView() {
             type="date"
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
-            className="text-xs px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none text-gray-700 cursor-pointer"
+            className="text-xs px-3.5 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none text-gray-700 cursor-pointer"
           />
 
           {/* Filter Rute */}
           <select
             value={selectedRute}
             onChange={(e) => setSelectedRute(e.target.value)}
-            className="text-xs px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none text-gray-700 cursor-pointer"
+            className="text-xs px-3.5 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none text-gray-700 cursor-pointer"
           >
             <option>Semua Rute</option>
             {ruteOptions.map((r) => (
@@ -258,7 +258,7 @@ export default function BookingView() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="text-xs px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none text-gray-700 cursor-pointer"
+            className="text-xs px-3.5 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none text-gray-700 cursor-pointer"
           >
             <option>Semua Status</option>
             <option value="Dikonfirmasi">Dikonfirmasi</option>
@@ -290,7 +290,7 @@ export default function BookingView() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Cari kode booking, nama, rute..."
-            className="text-xs px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] w-full sm:w-64 text-gray-700"
+            className="text-xs px-3.5 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] w-full sm:w-64 text-gray-700"
           />
           <button className="px-4 py-2 bg-[#0A64BC] text-white font-semibold text-xs rounded-xl hover:bg-[#08529B] transition cursor-pointer">
             Cari
@@ -298,22 +298,22 @@ export default function BookingView() {
         </div>
       </div>
 
-      {/* Tabel Data Booking */}
+      {/* Tabel Data Booking - Header Hitam Bold Capslock (Uppercase) */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-gray-50 text-gray-400 font-semibold border-b border-gray-100">
+            <thead className="bg-white border-b border-gray-100">
               <tr>
-                <th className="py-3.5 px-4 text-center w-12">No</th>
-                <th className="py-3.5 px-4">Kode Booking</th>
-                <th className="py-3.5 px-4">Nama Pelanggan</th>
-                <th className="py-3.5 px-4">Rute</th>
-                <th className="py-3.5 px-4">Tanggal Berangkat</th>
-                <th className="py-3.5 px-4 text-center">Status</th>
-                <th className="py-3.5 px-4 text-center w-24">Aksi</th>
+                <th className="py-3.5 px-4 text-center w-12 text-gray-900 font-bold uppercase tracking-wider">NO</th>
+                <th className="py-3.5 px-4 text-gray-900 font-bold uppercase tracking-wider">KODE BOOKING</th>
+                <th className="py-3.5 px-4 text-gray-900 font-bold uppercase tracking-wider">NAMA PELANGGAN</th>
+                <th className="py-3.5 px-4 text-gray-900 font-bold uppercase tracking-wider">RUTE</th>
+                <th className="py-3.5 px-4 text-gray-900 font-bold uppercase tracking-wider">TANGGAL BERANGKAT</th>
+                <th className="py-3.5 px-4 text-center text-gray-900 font-bold uppercase tracking-wider">STATUS</th>
+                <th className="py-3.5 px-4 text-center w-24 text-gray-900 font-bold uppercase tracking-wider">AKSI</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-gray-700">
+            <tbody className="divide-y divide-gray-100 text-gray-700 bg-white">
               {filteredBookings.length > 0 ? (
                 filteredBookings.map((item, index) => (
                   <tr key={item.kodeBooking} className="hover:bg-gray-50/60 transition">
@@ -373,7 +373,7 @@ export default function BookingView() {
                   onChange={handleNameChange}
                   placeholder="Contoh: Andi Pratama"
                   required
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                 />
                 <p className="text-[10px] text-gray-400 mt-1">* Hanya dapat diisi huruf dan spasi.</p>
               </div>
@@ -383,7 +383,7 @@ export default function BookingView() {
                 <select
                   value={newBooking.rute}
                   onChange={(e) => setNewBooking({ ...newBooking, rute: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                 >
                   {ruteOptions.map((r) => (
                     <option key={r} value={r}>
@@ -401,7 +401,7 @@ export default function BookingView() {
                     value={newBooking.tanggalBerangkat}
                     onChange={(e) => setNewBooking({ ...newBooking, tanggalBerangkat: e.target.value })}
                     required
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   />
                 </div>
                 <div>
@@ -412,7 +412,7 @@ export default function BookingView() {
                     onChange={(e) => setNewBooking({ ...newBooking, jumlahKursi: Number(e.target.value) })}
                     min={1}
                     required
-                    className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                    className="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   />
                 </div>
               </div>
@@ -427,7 +427,7 @@ export default function BookingView() {
                     onChange={handleHargaChange}
                     placeholder="Contoh: 150000"
                     required
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                    className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   />
                   <p className="text-[10px] text-gray-400 mt-1">* Masukkan angka saja (otomatis ke format Rp).</p>
                 </div>
@@ -436,7 +436,7 @@ export default function BookingView() {
                   <select
                     value={newBooking.status}
                     onChange={(e) => setNewBooking({ ...newBooking, status: e.target.value as BookingItem['status'] })}
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                    className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
                   >
                     <option value="Dikonfirmasi">Dikonfirmasi</option>
                     <option value="Menunggu">Menunggu</option>
