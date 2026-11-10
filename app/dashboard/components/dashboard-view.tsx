@@ -1,198 +1,530 @@
+
 'use client';
 
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+
+interface DashboardBooking {
+  id: number;
+  bookingCode: string;
+  customerName: string | null;
+  customerEmail: string | null;
+  bookingDate: string;
+  passengerCount: number;
+  totalAmount: number;
+  bookingStatus: string;
+  paymentStatus: string | null;
+  totalPaid: number;
+}
+
+interface DashboardData {
+  totalBookings: number;
+  totalCustomers: number;
+  totalRevenue: number;
+  pendingBookings: number;
+  confirmedBookings: number;
+  latestBookings: DashboardBooking[];
+}
+
+const API_URL =
+  process.env.NEXT_PUBLIC_DASHBOARD_API_URL ||
+  'http://localhost:5001/api/dashboard';
+
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }).format(amount);
+
+const formatDate = (date: string) => {
+  if (!date) return '-';
+
+  return new Date(date).toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
+const statusInfo: Record<string, { label: string; color: string }> = {
+  pending: {
+    label: 'Menunggu',
+    color: 'bg-amber-100 text-amber-700',
+  },
+  confirmed: {
+    label: 'Dikonfirmasi',
+    color: 'bg-emerald-100 text-emerald-700',
+  },
+  completed: {
+    label: 'Selesai',
+    color: 'bg-gray-100 text-gray-700',
+  },
+  cancelled: {
+    label: 'Dibatalkan',
+    color: 'bg-rose-100 text-rose-700',
+  },
+  refunded: {
+    label: 'Dikembalikan',
+    color: 'bg-purple-100 text-purple-700',
+  },
+};
 
 export default function DashboardView() {
-  const recentBookings = [
-    { code: 'TRV-001234', name: 'Andi Pratama', route: 'Malang - Surabaya', date: '15 Okt 2025', status: 'Dikonfirmasi', color: 'bg-emerald-100 text-emerald-700' },
-    { code: 'TRV-001233', name: 'Siti Aisyah', route: 'Jakarta - Bandung', date: '15 Okt 2025', status: 'Menunggu', color: 'bg-amber-100 text-amber-700' },
-    { code: 'TRV-001232', name: 'Budi Santoso', route: 'Yogyakarta - Jakarta', date: '14 Okt 2025', status: 'Dalam Perjalanan', color: 'bg-sky-100 text-sky-700' },
-    { code: 'TRV-001231', name: 'Rina Lestari', route: 'Surabaya - Bali', date: '14 Okt 2025', status: 'Dikonfirmasi', color: 'bg-emerald-100 text-emerald-700' },
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchDashboard = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const response = await fetch(API_URL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        cache: 'no-store',
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Gagal mengambil data dashboard (${response.status})`
+        );
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(
+          result.message || 'Gagal mengambil data dashboard'
+        );
+      }
+
+      setDashboard(result.data);
+    } catch (err) {
+      console.error('Dashboard API Error:', err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Terjadi kesalahan saat mengambil data'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  const totalBookings = dashboard?.totalBookings ?? 0;
+  const totalCustomers = dashboard?.totalCustomers ?? 0;
+  const totalRevenue = dashboard?.totalRevenue ?? 0;
+  const pendingBookings = dashboard?.pendingBookings ?? 0;
+  const confirmedBookings = dashboard?.confirmedBookings ?? 0;
+
+  const otherBookings = Math.max(
+    0,
+    totalBookings - pendingBookings - confirmedBookings
+  );
+
+  const getPercentage = (value: number) =>
+    totalBookings > 0
+      ? (value / totalBookings) * 100
+      : 0;
+
+  const confirmedPercentage = getPercentage(confirmedBookings);
+  const pendingPercentage = getPercentage(pendingBookings);
+  const otherPercentage = getPercentage(otherBookings);
+
+  const statusData = [
+    {
+      label: 'Dikonfirmasi',
+      count: confirmedBookings,
+      percentage: confirmedPercentage,
+      color: 'bg-emerald-500',
+      stroke: '#10b981',
+    },
+    {
+      label: 'Menunggu',
+      count: pendingBookings,
+      percentage: pendingPercentage,
+      color: 'bg-orange-500',
+      stroke: '#f97316',
+    },
+    {
+      label: 'Status lainnya',
+      count: otherBookings,
+      percentage: otherPercentage,
+      color: 'bg-sky-500',
+      stroke: '#0ea5e9',
+    },
   ];
 
-  const popularRoutes = [
-    { rank: 1, route: 'Jakarta - Bandung', count: 48 },
-    { rank: 2, route: 'Surabaya - Malang', count: 42 },
-    { rank: 3, route: 'Yogyakarta - Jakarta', count: 36 },
-    { rank: 4, route: 'Bandung - Surabaya', count: 28 },
-    { rank: 5, route: 'Bali - Denpasar', count: 24 },
-  ];
+  const circumference = 100;
+  let currentOffset = 0;
+
+  const donutSegments = statusData.map((item) => {
+    const segment = {
+      ...item,
+      offset: currentOffset,
+    };
+
+    currentOffset += item.percentage;
+
+    return segment;
+  });
+
+  const today = new Date().toLocaleDateString('id-ID', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 w-full font-sans bg-white min-h-screen">
-      {/* Header Info */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-1 sm:gap-2">
+
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+
         <div>
           <h1 className="text-lg sm:text-2xl font-bold text-[#0A64BC] tracking-tight">
             Selamat datang, Admin!
           </h1>
-          <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
+
+          <p className="text-[11px] sm:text-xs text-gray-500 mt-1">
             Berikut ringkasan aktivitas dan data terbaru di Marlibu Tour & Travel.
           </p>
         </div>
-        <span className="text-[11px] sm:text-xs text-gray-400 font-medium">Sen, 13 Okt 2025</span>
+
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] sm:text-xs text-gray-400 font-medium">
+            {today}
+          </span>
+
+          <button
+            onClick={fetchDashboard}
+            disabled={loading}
+            className="text-xs bg-blue-50 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-100 disabled:opacity-50"
+          >
+            {loading ? 'Memuat...' : 'Refresh'}
+          </button>
+        </div>
+
       </div>
 
-      {/* 4 Cards Summary */}
+      {/* Error */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm">
+          <p className="font-semibold">Gagal memuat dashboard</p>
+          <p className="mt-1">{error}</p>
+          <p className="text-xs mt-2">
+            Pastikan backend aktif dan URL API sudah benar.
+          </p>
+          <button
+            onClick={fetchDashboard}
+            className="mt-3 underline font-semibold"
+          >
+            Coba lagi
+          </button>
+        </div>
+      )}
+
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+
         {/* Total Booking */}
-        <div className="bg-[#0A64BC] text-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs text-blue-100 font-medium">Total Booking</span>
-          <div className="mt-1.5 sm:mt-3">
-            <h2 className="text-xl sm:text-3xl font-extrabold">248</h2>
-            <p className="text-[10px] sm:text-[11px] text-blue-200 mt-0.5 sm:mt-1">
-              <span className="text-emerald-300 font-bold">↑ 12%</span> dari bulan lalu
+        <div className="bg-[#0A64BC] text-white p-4 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm">
+          <span className="text-xs text-blue-100 font-medium">
+            Total Booking
+          </span>
+
+          <div className="mt-3">
+            <h2 className="text-2xl sm:text-3xl font-extrabold">
+              {loading ? '...' : totalBookings.toLocaleString('id-ID')}
+            </h2>
+            <p className="text-xs text-blue-200 mt-1">
+              Total seluruh booking
             </p>
           </div>
         </div>
 
-        {/* Pelanggan Baru */}
-        <div className="bg-[#FF6B00] text-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs text-orange-100 font-medium">Pelanggan Baru</span>
-          <div className="mt-1.5 sm:mt-3">
-            <h2 className="text-xl sm:text-3xl font-extrabold">56</h2>
-            <p className="text-[10px] sm:text-[11px] text-orange-200 mt-0.5 sm:mt-1">
-              <span className="text-emerald-200 font-bold">↑ 20%</span> dari bulan lalu
+        {/* Total Pelanggan */}
+        <div className="bg-[#FF6B00] text-white p-4 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm">
+          <span className="text-xs text-orange-100 font-medium">
+            Total Pelanggan
+          </span>
+
+          <div className="mt-3">
+            <h2 className="text-2xl sm:text-3xl font-extrabold">
+              {loading ? '...' : totalCustomers.toLocaleString('id-ID')}
+            </h2>
+            <p className="text-xs text-orange-200 mt-1">
+              Data pelanggan terdaftar
             </p>
           </div>
         </div>
 
         {/* Total Pendapatan */}
-        <div className="bg-[#30475E] text-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs text-gray-300 font-medium">Total Pendapatan</span>
-          <div className="mt-1.5 sm:mt-3">
-            <h2 className="text-lg sm:text-2xl font-extrabold">Rp 24.800.000</h2>
-            <p className="text-[10px] sm:text-[11px] text-gray-300 mt-0.5 sm:mt-1">
-              <span className="text-emerald-400 font-bold">↑ 15%</span> dari bulan lalu
+        <div className="bg-[#30475E] text-white p-4 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm">
+          <span className="text-xs text-gray-300 font-medium">
+            Total Pendapatan
+          </span>
+
+          <div className="mt-3">
+            <h2 className="text-xl sm:text-2xl font-extrabold">
+              {loading ? '...' : formatCurrency(totalRevenue)}
+            </h2>
+            <p className="text-xs text-gray-300 mt-1">
+              Pembayaran terverifikasi
             </p>
           </div>
         </div>
 
-        {/* Keberangkatan Hari Ini */}
-        <div className="bg-white text-gray-800 p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs text-gray-500 font-medium">Keberangkatan Hari Ini</span>
-          <div className="mt-1.5 sm:mt-3">
-            <h2 className="text-xl sm:text-3xl font-extrabold text-[#0A64BC]">12</h2>
-            <p className="text-[10px] sm:text-[11px] text-gray-500 mt-0.5 sm:mt-1">
-              <span className="text-emerald-600 font-bold">↑ 2%</span> dari kemarin
+        {/* Booking Pending */}
+        <div className="bg-white text-gray-800 p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm">
+          <span className="text-xs text-gray-500 font-medium">
+            Booking Menunggu
+          </span>
+
+          <div className="mt-3">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0A64BC]">
+              {loading ? '...' : pendingBookings.toLocaleString('id-ID')}
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Menunggu konfirmasi
             </p>
           </div>
         </div>
+
       </div>
 
       {/* Middle Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Chart Tren Booking */}
-        <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm space-y-3 sm:space-y-4">
-          <h3 className="text-xs sm:text-sm font-bold text-gray-800">Tren Booking (7 Hari Terakhir)</h3>
-          <div className="h-36 sm:h-44 w-full flex flex-col justify-between pt-2 sm:pt-4 overflow-x-auto">
-            <div className="relative w-full min-w-[300px] h-28 sm:h-32 flex items-end">
-              <svg className="w-full h-full overflow-visible" viewBox="0 0 500 100">
-                <path
-                  d="M 10 70 L 90 60 L 170 40 L 250 50 L 330 30 L 410 45 L 490 20"
+
+        {/* Booking Trend */}
+        <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm">
+
+          <h3 className="text-sm font-bold text-gray-800">
+            Tren Booking
+          </h3>
+
+          <div className="h-44 flex items-center justify-center text-center">
+            <div>
+              <p className="text-sm text-gray-400">
+                Data tren booking belum tersedia.
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Backend perlu menyediakan endpoint tren booking 7 hari terakhir.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Booking Status */}
+        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm">
+
+          <h3 className="text-sm font-bold text-gray-800">
+            Status Booking
+          </h3>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 mt-5">
+
+            {/* Donut Chart */}
+            <div className="relative w-28 h-28 shrink-0">
+
+              <svg
+                className="w-full h-full -rotate-90"
+                viewBox="0 0 36 36"
+              >
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15.9155"
                   fill="none"
-                  stroke="#0A64BC"
-                  strokeWidth="2.5"
+                  stroke="#e5e7eb"
+                  strokeWidth="4"
                 />
-                <circle cx="10" cy="70" r="4" fill="#0A64BC" />
-                <circle cx="90" cy="60" r="4" fill="#0A64BC" />
-                <circle cx="170" cy="40" r="4" fill="#0A64BC" />
-                <circle cx="250" cy="50" r="4" fill="#0A64BC" />
-                <circle cx="330" cy="30" r="4" fill="#0A64BC" />
-                <circle cx="410" cy="45" r="4" fill="#0A64BC" />
-                <circle cx="490" cy="20" r="4" fill="#0A64BC" />
-              </svg>
-            </div>
-            <div className="flex justify-between text-[10px] sm:text-[11px] text-gray-400 border-t border-gray-100 pt-2 min-w-[300px]">
-              <span>6 Okt</span>
-              <span>7 Okt</span>
-              <span>8 Okt</span>
-              <span>9 Okt</span>
-              <span>10 Okt</span>
-              <span>11 Okt</span>
-              <span>12 Okt</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Status Booking Donut */}
-        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm space-y-3 sm:space-y-4">
-          <h3 className="text-xs sm:text-sm font-bold text-gray-800">Status Booking</h3>
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-            <div className="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0 flex items-center justify-center">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                <path className="text-emerald-500" strokeWidth="4" strokeDasharray="62, 100" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path className="text-[#FF6B00]" strokeWidth="4" strokeDasharray="18, 100" strokeDashoffset="-62" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path className="text-sky-500" strokeWidth="4" strokeDasharray="12, 100" strokeDashoffset="-80" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                {donutSegments.map((item) => (
+                  <circle
+                    key={item.label}
+                    cx="18"
+                    cy="18"
+                    r="15.9155"
+                    fill="none"
+                    stroke={item.stroke}
+                    strokeWidth="4"
+                    strokeDasharray={`${item.percentage} ${circumference - item.percentage}`}
+                    strokeDashoffset={-item.offset}
+                  />
+                ))}
               </svg>
-              <div className="absolute text-center">
-                <span className="text-sm sm:text-base font-bold text-gray-800 block leading-tight">248</span>
-                <span className="text-[9px] sm:text-[10px] text-gray-400">Total</span>
+
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-lg font-bold text-gray-800">
+                  {loading ? '...' : totalBookings}
+                </span>
+                <span className="text-[10px] text-gray-400">
+                  Total
+                </span>
               </div>
+
             </div>
 
-            <div className="space-y-1 sm:space-y-1.5 text-[10px] sm:text-[11px] w-full">
-              <div className="flex justify-between items-center"><span className="flex items-center gap-1.5 text-gray-600"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Dikonfirmasi</span><span className="font-semibold text-gray-800">62%</span></div>
-              <div className="flex justify-between items-center"><span className="flex items-center gap-1.5 text-gray-600"><span className="w-2 h-2 rounded-full bg-[#FF6B00]"></span> Menunggu</span><span className="font-semibold text-gray-800">18%</span></div>
-              <div className="flex justify-between items-center"><span className="flex items-center gap-1.5 text-gray-600"><span className="w-2 h-2 rounded-full bg-sky-500"></span> Dalam Perjalanan</span><span className="font-semibold text-gray-800">12%</span></div>
-              <div className="flex justify-between items-center"><span className="flex items-center gap-1.5 text-gray-600"><span className="w-2 h-2 rounded-full bg-gray-300"></span> Selesai</span><span className="font-semibold text-gray-800">6%</span></div>
-              <div className="flex justify-between items-center"><span className="flex items-center gap-1.5 text-gray-600"><span className="w-2 h-2 rounded-full bg-rose-500"></span> Dibatalkan</span><span className="font-semibold text-gray-800">2%</span></div>
+            {/* Status List */}
+            <div className="space-y-3 text-xs w-full">
+
+              {statusData.map((item) => (
+                <div
+                  key={item.label}
+                  className="flex justify-between items-center gap-2"
+                >
+                  <span className="flex items-center gap-2 text-gray-600">
+                    <span className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
+                    {item.label}
+                  </span>
+
+                  <span className="font-semibold text-gray-800">
+                    {loading
+                      ? '...'
+                      : `${item.percentage.toFixed(1)}%`}
+                  </span>
+                </div>
+              ))}
+
             </div>
+
           </div>
+
         </div>
+
       </div>
 
       {/* Bottom Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Table Booking Terbaru */}
-        <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm space-y-3 sm:space-y-4">
-          <h3 className="text-xs sm:text-sm font-bold text-gray-800">Booking Terbaru</h3>
+
+        {/* Latest Bookings */}
+        <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm">
+
+          <h3 className="text-sm font-bold text-gray-800 mb-4">
+            Booking Terbaru
+          </h3>
+
           <div className="overflow-x-auto w-full">
-            <table className="w-full text-left text-[11px] sm:text-xs whitespace-nowrap">
+
+            <table className="w-full text-left text-xs whitespace-nowrap">
+
               <thead>
-                <tr className="border-b border-gray-100 text-gray-400 font-medium">
-                  <th className="pb-2.5 sm:pb-3 pr-3 sm:pr-4 font-medium">Kode Booking</th>
-                  <th className="pb-2.5 sm:pb-3 pr-3 sm:pr-4 font-medium">Nama Pelanggan</th>
-                  <th className="pb-2.5 sm:pb-3 pr-3 sm:pr-4 font-medium">Rute</th>
-                  <th className="pb-2.5 sm:pb-3 pr-3 sm:pr-4 font-medium">Tanggal Berangkat</th>
-                  <th className="pb-2.5 sm:pb-3 font-medium">Status</th>
+                <tr className="border-b border-gray-100 text-gray-400">
+                  <th className="pb-3 pr-4 font-medium">Kode Booking</th>
+                  <th className="pb-3 pr-4 font-medium">Nama Pelanggan</th>
+                  <th className="pb-3 pr-4 font-medium">Tanggal Booking</th>
+                  <th className="pb-3 pr-4 font-medium">Penumpang</th>
+                  <th className="pb-3 pr-4 font-medium">Total</th>
+                  <th className="pb-3 font-medium">Status</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-gray-50 text-gray-700">
-                {recentBookings.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50/50">
-                    <td className="py-2.5 sm:py-3 pr-3 sm:pr-4 font-semibold text-gray-800">{item.code}</td>
-                    <td className="py-2.5 sm:py-3 pr-3 sm:pr-4">{item.name}</td>
-                    <td className="py-2.5 sm:py-3 pr-3 sm:pr-4">{item.route}</td>
-                    <td className="py-2.5 sm:py-3 pr-3 sm:pr-4 text-gray-500">{item.date}</td>
-                    <td className="py-2.5 sm:py-3">
-                      <span className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-semibold ${item.color}`}>
-                        {item.status}
-                      </span>
+
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-gray-400">
+                      Memuat data booking...
                     </td>
                   </tr>
-                ))}
+                ) : error ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-red-400">
+                      Data gagal dimuat.
+                    </td>
+                  </tr>
+                ) : dashboard?.latestBookings?.length ? (
+                  dashboard.latestBookings.map((item) => {
+                    const status =
+                      statusInfo[item.bookingStatus] || {
+                        label: item.bookingStatus,
+                        color: 'bg-gray-100 text-gray-700',
+                      };
+
+                    return (
+                      <tr key={item.id} className="hover:bg-gray-50">
+
+                        <td className="py-3 pr-4 font-semibold text-gray-800">
+                          {item.bookingCode}
+                        </td>
+
+                        <td className="py-3 pr-4">
+                          <div className="font-medium">
+                            {item.customerName || 'Pelanggan'}
+                          </div>
+                          <div className="text-[10px] text-gray-400">
+                            {item.customerEmail || '-'}
+                          </div>
+                        </td>
+
+                        <td className="py-3 pr-4 text-gray-500">
+                          {formatDate(item.bookingDate)}
+                        </td>
+
+                        <td className="py-3 pr-4">
+                          {item.passengerCount} orang
+                        </td>
+
+                        <td className="py-3 pr-4 font-medium">
+                          {formatCurrency(item.totalAmount)}
+                        </td>
+
+                        <td className="py-3">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold ${status.color}`}
+                          >
+                            {status.label}
+                          </span>
+                        </td>
+
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-gray-400">
+                      Belum ada data booking.
+                    </td>
+                  </tr>
+                )}
+
               </tbody>
+
             </table>
+
           </div>
+
         </div>
 
-        {/* Rute Populer */}
-        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm space-y-3 sm:space-y-4">
-          <h3 className="text-xs sm:text-sm font-bold text-gray-800">Rute Populer</h3>
-          <div className="space-y-2 sm:space-y-3">
-            {popularRoutes.map((route) => (
-              <div key={route.rank} className="flex items-center justify-between text-[11px] sm:text-xs py-0.5 sm:py-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-gray-400 w-4">{route.rank}.</span>
-                  <span className="font-medium text-gray-700">{route.route}</span>
-                </div>
-                <span className="text-gray-400 font-medium shrink-0 ml-2">{route.count} booking</span>
-              </div>
-            ))}
+        {/* Popular Routes */}
+        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm">
+
+          <h3 className="text-sm font-bold text-gray-800 mb-4">
+            Rute Populer
+          </h3>
+
+          <div className="h-40 flex items-center justify-center text-center">
+            <p className="text-xs text-gray-400">
+              Data rute populer belum tersedia dari backend.
+            </p>
           </div>
+
         </div>
+
       </div>
+
     </div>
   );
 }
