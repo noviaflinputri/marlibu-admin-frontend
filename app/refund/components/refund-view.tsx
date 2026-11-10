@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, RefreshCw, CheckCircle2, Clock, XCircle, FileText, X, Copy, Check, ChevronDown } from 'lucide-react';
 
 interface RefundItem {
@@ -15,85 +15,56 @@ interface RefundItem {
   alasan: string;
   catatan: string;
   hargaAsli: number;
-  potongan: number; // 25%
-  nominalRefund: number; // 75%
+  potongan: number; 
+  nominalRefund: number; 
   status: 'Proses' | 'Selesai' | 'Ditolak';
 }
 
-const initialRefunds: RefundItem[] = [
-  {
-    id: '1',
-    idBooking: 'TRV001234',
-    nama: 'Siti Badriah',
-    bank: 'Bank BCA',
-    rekening: '8820491221',
-    email: 'Situ.Badriah@gmail.com',
-    telepon: '0812-3456-7890',
-    tglPengajuan: '12 Okt 2026, 09:30',
-    alasan: 'Sakit Mendadak',
-    catatan: 'Melampirkan surat dokter RS Medika. Mohon pengembalian diproses.',
-    hargaAsli: 500000,
-    potongan: 125000,
-    nominalRefund: 375000,
-    status: 'Proses',
-  },
-  {
-    id: '2',
-    idBooking: 'TRV001235',
-    nama: 'Ayu Tink Tink',
-    bank: 'Bank BRI',
-    rekening: '081298765432',
-    email: 'ayutinktink@gmail.com',
-    telepon: '0812-9876-5432',
-    tglPengajuan: '11 Okt 2026, 14:15',
-    alasan: 'Perubahan Rencana / Jadwal Acara',
-    catatan: 'Kantor memindahkan jadwal dinas mendadak.',
-    hargaAsli: 240000,
-    potongan: 60000,
-    nominalRefund: 180000,
-    status: 'Selesai',
-  },
-  {
-    id: '3',
-    idBooking: 'TRV001236',
-    nama: 'Cita Citata',
-    bank: 'Bank Mandiri',
-    rekening: '131000567890',
-    email: 'citacitata@gmail.com',
-    telepon: '0813-7788-9900',
-    tglPengajuan: '10 Okt 2026, 11:00',
-    alasan: 'Salah Pilih Tanggal',
-    catatan: 'Ingin memesan untuk minggu depan.',
-    hargaAsli: 400000,
-    potongan: 100000,
-    nominalRefund: 300000,
-    status: 'Ditolak',
-  },
-  {
-    id: '4',
-    idBooking: 'TRV001237',
-    nama: 'Tulustapitak Penyanyi',
-    bank: 'Bank BNI',
-    rekening: '0234567890',
-    email: 'dewi.anggraini@gmail.com',
-    telepon: '0856-1122-3344',
-    tglPengajuan: '09 Okt 2026, 16:45',
-    alasan: 'Keperluan Keluarga',
-    catatan: 'Ada acara keluarga mendadak di luar kota.',
-    hargaAsli: 800000,
-    potongan: 200000,
-    nominalRefund: 600000,
-    status: 'Proses',
-  },
-];
-
 export default function RefundView() {
-  const [refunds, setRefunds] = useState<RefundItem[]>(initialRefunds);
+  const [refunds, setRefunds] = useState<RefundItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua Status');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedRefund, setSelectedRefund] = useState<RefundItem | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Fungsi untuk mengambil data dari backend API
+  const fetchRefunds = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5001/api/refunds');
+      const result = await response.json();
+      
+      if (result.success && Array.isArray(result.data)) {
+        const mappedData = result.data.map((item: any) => ({
+          id: item.id.toString(),
+          idBooking: item.booking_code || `TRV00${item.booking_id || '1'}`,
+          nama: item.bank_account_name || 'Tanpa Nama',
+          bank: item.bank_name || '-',
+          rekening: item.bank_account_number || '-',
+          email: item.email || 'penumpang@email.com',
+          telepon: item.telepon || '08123456789',
+          tglPengajuan: item.created_at ? new Date(item.created_at).toLocaleString('id-ID') : 'Baru saja',
+          alasan: item.reason || '-',
+          catatan: item.admin_note || 'Tidak ada catatan khusus.',
+          hargaAsli: Number(item.requested_amount) || 0,
+          potongan: Number(item.deduction_amount) || 0,
+          nominalRefund: Number(item.refund_amount) || 0,
+          status: item.status === 'pending' ? 'Proses' : item.status === 'approved' ? 'Selesai' : 'Ditolak',
+        }));
+        setRefunds(mappedData);
+      }
+    } catch (error) {
+      console.error('Gagal mengambil data refund dari backend:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRefunds();
+  }, []);
 
   const filteredRefunds = refunds.filter((item) => {
     const matchesSearch =
@@ -110,9 +81,33 @@ export default function RefundView() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleUpdateStatus = (id: string, newStatus: 'Selesai' | 'Ditolak') => {
-    setRefunds(refunds.map((item) => (item.id === id ? { ...item, status: newStatus } : item)));
-    setSelectedRefund(null);
+  // Fungsi update status yang sudah dihubungkan ke backend API
+  const handleUpdateStatus = async (id: string, newStatus: 'Selesai' | 'Ditolak') => {
+    // Sesuaikan nilai status yang dikirim ke backend ('approved' atau 'rejected')
+    const backendStatus = newStatus === 'Selesai' ? 'approved' : 'rejected';
+
+    try {
+      const response = await fetch(`http://localhost:5001/api/refunds/${id}`, {
+        method: 'PUT', // Ubah ke PATCH jika backend menggunakan router patch
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: backendStatus }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Update state lokal dan tutup modal setelah berhasil di database
+        setRefunds(refunds.map((item) => (item.id === id ? { ...item, status: newStatus } : item)));
+        setSelectedRefund(null);
+      } else {
+        alert('Gagal memperbarui status: ' + (result.message || 'Kesalahan pada server'));
+      }
+    } catch (error) {
+      console.error('Error saat memperbarui status:', error);
+      alert('Terjadi kesalahan koneksi ke server.');
+    }
   };
 
   return (
@@ -127,7 +122,7 @@ export default function RefundView() {
         </div>
         <div className="bg-white border border-blue-100 px-4 py-2 rounded-xl shadow-2xs flex items-center gap-3">
           <div className="p-2 bg-blue-50 text-[#0A64BC] rounded-lg">
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-4 h-4 cursor-pointer" onClick={fetchRefunds} />
           </div>
           <div>
             <p className="text-[10px] font-semibold text-gray-400">Kebijakan Refund</p>
@@ -143,8 +138,8 @@ export default function RefundView() {
             <p className="text-[11px] font-semibold">TOTAL PENGAJUAN</p>
             <FileText className="w-4 h-4 text-[#0A64BC]" />
           </div>
-          <h3 className="text-lg font-extrabold text-gray-800">24</h3>
-          <p className="text-[11px] font-medium text-gray-400">Pengajuan bulan ini</p>
+          <h3 className="text-lg font-extrabold text-gray-800">{refunds.length}</h3>
+          <p className="text-[11px] font-medium text-gray-400">Pengajuan tercatat</p>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs space-y-1">
@@ -152,8 +147,9 @@ export default function RefundView() {
             <p className="text-[11px] font-semibold">PERLU DIPROSES</p>
             <Clock className="w-4 h-4 text-amber-500" />
           </div>
-          {/* Angka diubah menjadi hitam pekat (text-gray-900) */}
-          <h3 className="text-lg font-extrabold text-gray-900">2</h3>
+          <h3 className="text-lg font-extrabold text-gray-900">
+            {refunds.filter(i => i.status === 'Proses').length}
+          </h3>
           <p className="text-[11px] font-medium text-gray-400">Menunggu respon admin</p>
         </div>
 
@@ -162,7 +158,9 @@ export default function RefundView() {
             <p className="text-[11px] font-semibold">TOTAL NOMINAL REFUND</p>
             <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">75%</span>
           </div>
-          <h3 className="text-lg font-extrabold text-gray-800">Rp 13.900.000</h3>
+          <h3 className="text-lg font-extrabold text-gray-800">
+            Rp {refunds.reduce((acc, curr) => acc + curr.nominalRefund, 0).toLocaleString('id-ID')}
+          </h3>
           <p className="text-[11px] font-medium text-gray-400">Hak refund keseluruhan</p>
         </div>
 
@@ -171,7 +169,9 @@ export default function RefundView() {
             <p className="text-[11px] font-semibold">SELESAI TRANSAKSI</p>
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
-          <h3 className="text-lg font-extrabold text-gray-800">19</h3>
+          <h3 className="text-lg font-extrabold text-gray-800">
+            {refunds.filter(i => i.status === 'Selesai').length}
+          </h3>
           <p className="text-[11px] font-medium text-gray-400">Telah dikirimkan</p>
         </div>
       </div>
@@ -190,7 +190,6 @@ export default function RefundView() {
             />
           </div>
 
-          {/* Custom Dropdown Filter Status yang Diperbaiki agar Tidak Kosong */}
           <div className="relative w-full sm:w-auto">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -238,7 +237,13 @@ export default function RefundView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-xs">
-              {filteredRefunds.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-6 text-gray-400 text-xs">
+                    Memuat data dari database...
+                  </td>
+                </tr>
+              ) : filteredRefunds.length > 0 ? (
                 filteredRefunds.map((item, idx) => (
                   <tr key={item.id} className="hover:bg-gray-50/80 transition">
                     <td className="py-3.5 px-3 text-gray-500 font-medium">{idx + 1}</td>
@@ -280,7 +285,7 @@ export default function RefundView() {
               ) : (
                 <tr>
                   <td colSpan={6} className="text-center py-6 text-gray-400 text-xs">
-                    Tidak ada data refund yang ditemukan.
+                    Tidak ada data refund yang ditemukan dari server.
                   </td>
                 </tr>
               )}
