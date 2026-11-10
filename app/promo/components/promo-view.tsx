@@ -185,22 +185,23 @@ export default function PromoView() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs whitespace-nowrap">
-            <thead className="bg-gray-50 text-gray-400 font-semibold border-b border-gray-100">
+            <thead className="bg-gray-50 text-gray-900 font-semibold border-b border-gray-100">
               <tr>
                 <th className="py-3.5 px-4">ID</th>
-                <th className="py-3.5 px-4">Kode Promo</th>
-                <th className="py-3.5 px-4">Nama Promo</th>
-                <th className="py-3.5 px-4">Besaran Diskon</th>
-                <th className="py-3.5 px-4">Periode Berlaku</th>
-                <th className="py-3.5 px-4 text-center">Penggunaan</th>
-                <th className="py-3.5 px-4 text-center">Status</th>
-                <th className="py-3.5 px-4 text-center w-28">Aksi</th>
+                <th className="py-3.5 px-4">KODE PROMO</th>
+                <th className="py-3.5 px-4">NAMA PROMO</th>
+                <th className="py-3.5 px-4">BESARAN DISKON</th>
+                <th className="py-3.5 px-4">PERIODE BERLAKU</th>
+                <th className="py-3.5 px-4 text-center">PENGGUNAAN</th>
+                <th className="py-3.5 px-4 text-center">STATUS</th>
+                <th className="py-3.5 px-4 text-center w-28">AKSI</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-gray-700">
               {promos.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50/60 transition">
-                  <td className="py-3.5 px-4 font-medium text-gray-400">{item.id}</td>
+                  {/* ID berwarna biru (#0A64BC) dan tebal */}
+                  <td className="py-3.5 px-4 font-bold text-[#0A64BC]">{item.id}</td>
                   <td className="py-3.5 px-4">
                     <span className="px-2.5 py-1 bg-blue-50 text-[#0A64BC] font-mono font-bold rounded-lg border border-blue-100">
                       {item.kodePromo}

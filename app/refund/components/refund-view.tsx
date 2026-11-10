@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, RefreshCw, CheckCircle2, Clock, XCircle, FileText, X, Copy, Check } from 'lucide-react';
+import { Search, RefreshCw, CheckCircle2, Clock, XCircle, FileText, X, Copy, Check, ChevronDown } from 'lucide-react';
 
 interface RefundItem {
   id: string;
@@ -91,6 +91,7 @@ export default function RefundView() {
   const [refunds, setRefunds] = useState<RefundItem[]>(initialRefunds);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua Status');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedRefund, setSelectedRefund] = useState<RefundItem | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -151,7 +152,8 @@ export default function RefundView() {
             <p className="text-[11px] font-semibold">PERLU DIPROSES</p>
             <Clock className="w-4 h-4 text-amber-500" />
           </div>
-          <h3 className="text-lg font-extrabold text-amber-600">2</h3>
+          {/* Angka diubah menjadi hitam pekat (text-gray-900) */}
+          <h3 className="text-lg font-extrabold text-gray-900">2</h3>
           <p className="text-[11px] font-medium text-gray-400">Menunggu respon admin</p>
         </div>
 
@@ -188,25 +190,45 @@ export default function RefundView() {
             />
           </div>
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            {/* Filter Status dengan Warna Biru Sidebar (#0A64BC) */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-[#0A64BC] text-xs font-semibold border border-[#0A64BC] rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#08529B] cursor-pointer shadow-xs"
+          {/* Custom Dropdown Filter Status yang Diperbaiki agar Tidak Kosong */}
+          <div className="relative w-full sm:w-auto">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              type="button"
+              className="w-full sm:w-48 bg-[#0A64BC] text-xs font-semibold border border-[#0A64BC] rounded-xl px-4 py-2 text-white flex items-center justify-between shadow-xs cursor-pointer hover:bg-[#08529B] transition"
             >
-              <option value="Semua Status" className="bg-white text-gray-800">Semua Status</option>
-              <option value="Proses" className="bg-white text-gray-800">Proses</option>
-              <option value="Selesai" className="bg-white text-gray-800">Selesai</option>
-              <option value="Ditolak" className="bg-white text-gray-800">Ditolak</option>
-            </select>
+              <span>{statusFilter}</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-full sm:w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1 text-xs overflow-hidden">
+                {['Semua Status', 'Proses', 'Selesai', 'Ditolak'].map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => {
+                      setStatusFilter(status);
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 font-medium transition cursor-pointer ${
+                      statusFilter === status
+                        ? 'bg-blue-50 text-[#0A64BC] font-bold'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-gray-100 text-[11px] font-semibold text-gray-400">
+              <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-900">
                 <th className="py-3 px-3">NO</th>
                 <th className="py-3 px-3">ID BOOKING</th>
                 <th className="py-3 px-3">NAMA PENUMPANG</th>

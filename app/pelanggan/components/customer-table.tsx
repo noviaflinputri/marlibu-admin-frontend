@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Eye, Trash2, X, Calendar, CheckCircle2, Clock } from 'lucide-react';
+import { Search, Eye, Trash2, X, Calendar, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 
 interface BookingHistory {
   idBooking: string;
@@ -80,6 +80,9 @@ export default function CustomerTable() {
   const [customers, setCustomers] = useState<CustomerItem[]>(initialCustomers);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerItem | null>(null);
+  
+  // State baru untuk mengelola data pelanggan yang ingin dihapus via modal konfirmasi
+  const [customerToDelete, setCustomerToDelete] = useState<CustomerItem | null>(null);
 
   const filteredCustomers = customers.filter(
     (item) =>
@@ -87,6 +90,13 @@ export default function CustomerTable() {
       item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.telepon.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDeleteConfirmed = () => {
+    if (customerToDelete) {
+      setCustomers(customers.filter((c) => c.id !== customerToDelete.id));
+      setCustomerToDelete(null);
+    }
+  };
 
   return (
     <div className="pt-2 px-4 md:px-6 pb-6 space-y-5 w-full font-sans max-w-7xl mx-auto relative">
@@ -118,7 +128,7 @@ export default function CustomerTable() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-gray-100 text-[11px] font-semibold text-gray-400">
+              <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-900">
                 <th className="py-3 px-3">NO</th>
                 <th className="py-3 px-3">NAMA</th>
                 <th className="py-3 px-3">EMAIL</th>
@@ -137,7 +147,7 @@ export default function CustomerTable() {
                     <td className="py-3.5 px-3 text-gray-600">{item.telepon}</td>
                     <td className="py-3.5 px-3 text-center font-bold text-[#0A64BC]">{item.totalBooking}</td>
                     <td className="py-3.5 px-3 text-right space-x-1">
-                      {/* Tombol Ikon Mata (Netral Abu-abu) */}
+                      {/* Tombol Ikon Mata (Detail) */}
                       <button
                         onClick={() => setSelectedCustomer(item)}
                         title="Lihat Detail & Riwayat Booking"
@@ -145,8 +155,9 @@ export default function CustomerTable() {
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      {/* Tombol Hapus (Netral Abu-abu dengan hover merah) */}
+                      {/* Tombol Hapus yang Memicu Modal Konfirmasi */}
                       <button
+                        onClick={() => setCustomerToDelete(item)}
                         title="Hapus Pelanggan"
                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded-lg transition cursor-pointer inline-flex items-center"
                       >
@@ -242,6 +253,41 @@ export default function CustomerTable() {
                 className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold transition cursor-pointer shadow-2xs"
               >
                 Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Penghapusan di Tengah Layar */}
+      {customerToDelete && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 p-6 text-center space-y-4">
+            <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto border border-red-100">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-gray-900">Hapus Data Pelanggan?</h3>
+              <p className="text-xs text-gray-500">
+                Apakah kamu yakin ingin menghapus <span className="font-bold text-gray-800">{customerToDelete.nama}</span> dari daftar pelanggan? Tindakan ini tidak dapat dibatalkan.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setCustomerToDelete(null)}
+                className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirmed}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-xs"
+              >
+                Ya, Hapus
               </button>
             </div>
           </div>
