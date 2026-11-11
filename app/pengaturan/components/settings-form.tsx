@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function SettingsForm() {
   const [adminProfile, setAdminProfile] = useState({
+    id: 1, // ID baris pengaturan di database
     name: 'Admin Marlibu',
     email: 'admin@marlibu.com',
     phone: '081234567890',
@@ -12,7 +13,7 @@ export default function SettingsForm() {
 
   // Nilai awal kata sandi saat ini
   const [passwordForm, setPasswordForm] = useState({
-    oldPassword: 'Sitorusfamz123!',
+    oldPassword: '  AdminMarlibu123!',
     newPassword: '',
     confirmPassword: '',
   });
@@ -25,6 +26,29 @@ export default function SettingsForm() {
   const [profileSaved, setProfileSaved] = useState(false);
   const [passwordSaved, setPasswordSaved] = useState(false);
   const [passwordError, setPasswordError] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  // 1. Ambil data pengaturan dari backend saat halaman dimuat
+  useEffect(() => {
+    fetch('http://localhost:5001/api/settings')
+      .then((res) => res.json())
+      .then((response) => {
+        if (response.success && response.data) {
+          setAdminProfile({
+            id: response.data.id || 1,
+            name: response.data.company_name || 'Admin Marlibu',
+            email: response.data.email || 'admin@marlibu.com',
+            phone: response.data.phone || '081234567890',
+            role: 'Administrator Utama',
+          });
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Gagal memuat pengaturan:', err);
+        setLoading(false);
+      });
+  }, []);
 
   // 5 Aturan Kelayakan Kata Sandi
   const passwordRequirements = [
@@ -37,10 +61,33 @@ export default function SettingsForm() {
 
   const isPasswordValid = passwordRequirements.every((req) => req.valid);
 
-  const handleProfileSubmit = (e: React.FormEvent) => {
+  // 2. Fungsi Kirim Perubahan Profil ke Backend (Database)
+  const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProfileSaved(true);
-    setTimeout(() => setProfileSaved(false), 3000);
+    try {
+      const response = await fetch(`http://localhost:5001/api/settings/${adminProfile.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          company_name: adminProfile.name,
+          email: adminProfile.email,
+          phone: adminProfile.phone,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setProfileSaved(true);
+        setTimeout(() => setProfileSaved(false), 3000);
+      } else {
+        alert('Gagal menyimpan profil: ' + result.message);
+      }
+    } catch (error) {
+      console.error('Error saat menyimpan profil:', error);
+      alert('Terjadi kesalahan koneksi ke server backend.');
+    }
   };
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
@@ -76,7 +123,7 @@ export default function SettingsForm() {
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-[#0A64BC] tracking-tight">Pengaturan Akun & Sistem</h1>
         <p className="text-xs text-gray-500 mt-1">
-          Kelola profil pengelola dan keamanan kata sandi admin Marlibu Tour & Travel.
+          Kelola profil pengelola dan keamanan kata sandi admin Marlibu Tour & Travel. {loading && '(Memuat data...)'}
         </p>
       </div>
 
@@ -87,14 +134,14 @@ export default function SettingsForm() {
             <h2 className="text-sm font-bold text-gray-800">Profil Admin</h2>
             {profileSaved && (
               <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">
-                ✓ Profil tersimpan
+                ✓ Profil tersimpan di database
               </span>
             )}
           </div>
 
           <form onSubmit={handleProfileSubmit} className="space-y-3.5 text-xs">
             <div>
-              <label className="block text-gray-700 font-medium mb-1">Nama Lengkap</label>
+              <label className="block text-gray-700 font-medium mb-1">Nama Lengkap / Travel</label>
               <input
                 type="text"
                 required
