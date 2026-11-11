@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,6 +79,21 @@ export default function LoginForm() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setErrorMsg('');
+    setGoogleLoading(true);
+
+    try {
+      await signIn('google', {
+        redirectTo: '/dashboard',
+      });
+    } catch (error) {
+      console.error('Google login error:', error);
+      setErrorMsg('Login Google gagal. Silakan coba kembali.');
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <div className="relative min-h-screen w-screen overflow-hidden flex items-center justify-center font-sans">
 
@@ -137,7 +154,7 @@ export default function LoginForm() {
               placeholder="Masukkan email"
               required
               autoComplete="username"
-              disabled={loading}
+              disabled={loading || googleLoading}
               className="w-full text-sm px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:bg-white text-gray-800 transition-all placeholder:text-gray-400 disabled:opacity-60"
             />
           </div>
@@ -149,7 +166,6 @@ export default function LoginForm() {
             </label>
 
             <div className="relative">
-
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
@@ -160,7 +176,7 @@ export default function LoginForm() {
                 placeholder="Masukkan kata sandi"
                 required
                 autoComplete="current-password"
-                disabled={loading}
+                disabled={loading || googleLoading}
                 className="w-full text-sm px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:bg-white text-gray-800 pr-12 transition-all placeholder:text-gray-400 disabled:opacity-60"
               />
 
@@ -168,7 +184,7 @@ export default function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                disabled={loading}
+                disabled={loading || googleLoading}
                 aria-label={
                   showPassword
                     ? 'Sembunyikan password'
@@ -176,10 +192,7 @@ export default function LoginForm() {
                 }
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
               >
-
                 {showPassword ? (
-
-                  /* Eye Off Icon */
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="w-5 h-5"
@@ -195,10 +208,7 @@ export default function LoginForm() {
                     <path d="M9.88 5.09A10.93 10.93 0 0 1 12 5c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19" />
                     <line x1="2" y1="2" x2="22" y2="22" />
                   </svg>
-
                 ) : (
-
-                  /* Eye Icon */
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="w-5 h-5"
@@ -212,9 +222,7 @@ export default function LoginForm() {
                     <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
-
                 )}
-
               </button>
             </div>
           </div>
@@ -222,7 +230,7 @@ export default function LoginForm() {
           {/* Login Button */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || googleLoading}
             className="w-full py-3 px-4 bg-[#0A64BC] hover:bg-[#08529B] text-white font-semibold rounded-xl text-sm shadow-md hover:shadow-lg transition-all cursor-pointer mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? 'Memeriksa akun...' : 'Masuk'}
@@ -230,7 +238,35 @@ export default function LoginForm() {
 
         </form>
 
-        {/* Google Login Notice */}
+        {/* Divider */}
+        <div className="flex items-center gap-3 my-5">
+          <div className="flex-1 border-t border-gray-200" />
+          <span className="text-xs text-gray-400">ATAU</span>
+          <div className="flex-1 border-t border-gray-200" />
+        </div>
+
+        {/* Google Login Button */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={loading || googleLoading}
+          className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl text-sm shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 48 48"
+            className="w-5 h-5"
+          >
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 3.08 13.22l7.98 6.19C12.96 13.72 18.03 9.5 24 9.5z" />
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.72 7.18l7.45 5.78c4.35-4.02 7.31-9.95 7.31-17.43z" />
+            <path fill="#FBBC05" d="M10.06 28.59A14.4 14.4 0 0 1 9.3 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.88.93 7.55 2.58 10.78l7.48-6.19z" />
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.91-5.78l-7.45-5.78c-2.07 1.39-4.72 2.21-8.46 2.21-5.97 0-11.04-4.22-12.94-9.91l-7.98 6.19C6.51 43.62 14.62 48 24 48z" />
+          </svg>
+
+          {googleLoading ? 'Menghubungkan ke Google...' : 'Login dengan Google'}
+        </button>
+
+        {/* Login Notice */}
         <div className="mt-5 text-center">
           <p className="text-xs text-gray-400">
             Login hanya tersedia untuk akun administrator terdaftar.

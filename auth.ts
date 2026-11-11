@@ -1,52 +1,84 @@
+
 import NextAuth from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
+
+const BACKEND_API_URL =
+  process.env.BACKEND_API_URL || 'http://localhost:5001/api';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    // 1. Google Provider
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          prompt: 'select_account', // Memaksa Google selalu menampilkan layar pilih akun
+          prompt: 'select_account',
           access_type: 'offline',
           response_type: 'code',
         },
       },
     }),
-
-    // 2. Credentials Provider (Login Manual Email & Password)
-    CredentialsProvider({
-      name: 'Credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        // Konversi email input menjadi huruf kecil semua sebelum dibandingkan
-        const inputEmail = (credentials?.email as string)?.toLowerCase();
-
-        if (inputEmail === 'admin@marlibu.com' && credentials?.password === 'admin123') {
-          return { id: '1', name: 'Admin Marlibu', email: 'admin@marlibu.com', role: 'admin' };
-        }
-        return null;
-      },
-    }),
   ],
+
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        // Jika login lewat Google, default-kan role sebagai 'user' (atau 'admin' sesuai kebutuhan)
-        token.role = (user as any).role || 'user';
+    async signIn({ account }) {
+      if (account?.provider !== 'google' || !account.id_token) {
+        return false;
       }
+
+      try {
+        const response = await fetch(`${BACKEND_API_URL}/auth/google`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            idToken: account.id_token,
+          }),
+        });
+
+        return response.ok;
+      } catch (error) {
+        console.error('Google admin verification failed:', error);
+        return false;
+      }
+    },
+
+    async jwt({ token, account }) {
+      if (account?.provider === 'google' && account.id_token) {
+        try {
+          const response = await fetch(`${BACKEND_API_URL}/auth/google`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              idToken: account.id_token,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            token.backendToken = data.token;
+            token.role = data.user?.role;
+            token.backendUser = data.user;
+          }
+        } catch (error) {
+          console.error('Failed to get backend token:', error);
+        }
+      }
+
       return token;
     },
+
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).role = token.role;
+        (session.user as any).id = token.sub;
       }
+
+      (session as any).backendToken = token.backendToken;
+
       return session;
     },
   },
