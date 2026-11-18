@@ -104,11 +104,11 @@ export default function RefundView() {
   };
 
   return (
-    <div className="pt-2 px-4 md:px-6 pb-6 space-y-5 w-full font-sans max-w-7xl mx-auto relative">
+    <div className="w-full px-9 pt-10 pb-6 space-y-5 font-sans relative">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-[#0A64BC] tracking-tight">Data Refund Penumpang</h1>
-          <p className="text-[11px] text-gray-500 mt-0.5">Kelola pengajuan pengembalian dana tiket penumpang (potongan standar kebijakan 25%).</p>
+          <h1 className="text-[26px] font-bold text-[#0A64BC] tracking-tight">Data Refund Penumpang</h1>
+          <p className="text-sm text-gray-500 mt-1">Kelola pengajuan pengembalian dana tiket penumpang (potongan standar kebijakan 25%).</p>
         </div>
         <div className="bg-white border border-blue-100 px-4 py-2 rounded-xl shadow-2xs flex items-center gap-3">
           <div>

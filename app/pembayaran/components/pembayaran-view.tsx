@@ -111,12 +111,10 @@ export default function PembayaranView() {
   };
 
   return (
-    <div className="pt-2 px-4 md:px-6 pb-6 space-y-3 w-full font-sans max-w-5xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-[#0A64BC] tracking-tight">Data Pembayaran</h1>
-          <p className="text-[11px] text-gray-500 mt-0.5">Kelola konfirmasi transaksi dan riwayat pembayaran pelanggan.</p>
-        </div>
+    <div className="w-full px-9 pt-10 pb-6 space-y-5 font-sans relative">
+      <div>
+        <h1 className="text-[26px] font-bold text-[#0A64BC] tracking-tight">Data Pembayaran</h1>
+        <p className="text-sm text-gray-500 mt-1">Kelola konfirmasi transaksi dan riwayat pembayaran pelanggan.</p>
       </div>
 
       {errorMsg && <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-xs">{errorMsg}</div>}
@@ -127,7 +125,7 @@ export default function PembayaranView() {
         </div>
       )}
 
-      <div className="flex items-center gap-1.5 pt-1 overflow-x-auto">
+      <div className="flex items-center gap-1.5 overflow-x-auto">
         {(['Semua', 'Menunggu', 'Disetujui', 'Ditolak'] as const).map((tab) => (
           <button type="button" key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${activeTab === tab ? 'bg-[#FF6B00] text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}>
             {tab}
@@ -135,7 +133,7 @@ export default function PembayaranView() {
         ))}
       </div>
 
-      <div className="space-y-3 pt-1">
+      <div className="space-y-3">
         {loading ? (
           <div className="bg-white rounded-xl p-10 flex flex-col items-center gap-3 border border-gray-100">
             <Loader2 className="w-6 h-6 text-[#0A64BC] animate-spin" />

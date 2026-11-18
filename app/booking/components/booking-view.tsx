@@ -230,19 +230,17 @@ export default function BookingView() {
   };
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full font-sans bg-white min-h-screen">
+    <div className="w-full px-9 pt-10 pb-6 space-y-5 font-sans relative">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#0A64BC] tracking-tight">
-            Data Booking
-          </h1>
+      <div>
+        <h1 className="text-[26px] font-bold text-[#0A64BC] tracking-tight">
+          Data Booking
+        </h1>
 
-          <p className="text-xs text-gray-500 mt-1">
-            Kelola dan pantau semua pesanan travel.
-          </p>
-        </div>
+        <p className="text-sm text-gray-500 mt-1">
+          Kelola dan pantau semua pesanan travel.
+        </p>
       </div>
 
       {/* Filter dan Search */}
@@ -314,13 +312,13 @@ export default function BookingView() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Cari kode booking, nama, rute..."
-            className="text-xs px-3.5 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] w-full sm:w-64 text-gray-700"
+            className="h-[42px] text-xs px-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] w-full sm:w-64 text-gray-700"
           />
 
           <button
             type="button"
             onClick={() => setSearchQuery(searchQuery.trim())}
-            className="px-4 py-2 bg-[#0A64BC] text-white font-semibold text-xs rounded-xl hover:bg-[#08529B] transition cursor-pointer"
+            className="px-4 py-2.5 bg-[#0A64BC] text-white font-semibold text-xs rounded-xl hover:bg-[#08529B] transition cursor-pointer"
           >
             Cari
           </button>
@@ -328,49 +326,49 @@ export default function BookingView() {
       </div>
 
       {/* Tabel Data Booking */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
+      <div className="w-full bg-white border border-[#A3A3A3] rounded-[20px] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full border-collapse text-left text-xs">
 
-            <thead className="bg-white border-b border-gray-100">
+            <thead className="h-[52px] border-b border-[#A3A3A3] text-[13px] font-bold text-gray-950 bg-white">
               <tr>
-                <th className="py-3.5 px-4 text-center w-12 text-gray-900 font-bold uppercase tracking-wider">
+                <th className="py-3 px-5 text-center w-[6%]">
                   NO
                 </th>
 
-                <th className="py-3.5 px-4 text-gray-900 font-bold uppercase tracking-wider">
+                <th className="py-3 px-5 w-[18%]">
                   KODE BOOKING
                 </th>
 
-                <th className="py-3.5 px-4 text-gray-900 font-bold uppercase tracking-wider">
+                <th className="py-3 px-5 w-[20%]">
                   NAMA PELANGGAN
                 </th>
 
-                <th className="py-3.5 px-4 text-gray-900 font-bold uppercase tracking-wider">
+                <th className="py-3 px-5 w-[18%]">
                   RUTE
                 </th>
 
-                <th className="py-3.5 px-4 text-gray-900 font-bold uppercase tracking-wider">
+                <th className="py-3 px-5 w-[18%]">
                   TANGGAL BERANGKAT
                 </th>
 
-                <th className="py-3.5 px-4 text-center text-gray-900 font-bold uppercase tracking-wider">
+                <th className="py-3 px-5 text-center w-[13%]">
                   STATUS
                 </th>
 
-                <th className="py-3.5 px-4 text-center w-24 text-gray-900 font-bold uppercase tracking-wider">
+                <th className="py-3 px-5 text-center w-[7%]">
                   AKSI
                 </th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-gray-100 text-gray-700 bg-white">
+            <tbody className="text-[13px] text-gray-600 bg-white">
 
               {isLoading ? (
                 <tr>
                   <td
                     colSpan={7}
-                    className="py-8 text-center text-gray-400"
+                    className="h-[65px] text-center text-gray-400"
                   >
                     Sedang mengambil data booking...
                   </td>
@@ -379,7 +377,7 @@ export default function BookingView() {
                 <tr>
                   <td
                     colSpan={7}
-                    className="py-8 text-center text-red-500"
+                    className="h-[65px] text-center text-red-500"
                   >
                     {errorMessage}
                   </td>
@@ -388,29 +386,29 @@ export default function BookingView() {
                 currentBookings.map((item, index) => (
                   <tr
                     key={item.kodeBooking}
-                    className="hover:bg-gray-50/60 transition"
+                    className="h-[65px] border-b border-gray-100 last:border-b-0 hover:bg-gray-50/60 transition"
                   >
-                    <td className="py-3.5 px-4 text-center text-gray-400 font-medium">
+                    <td className="px-5 py-3 text-center text-gray-400 font-medium">
                       {indexOfFirstItem + index + 1}
                     </td>
 
-                    <td className="py-3.5 px-4 font-bold text-gray-800">
+                    <td className="px-5 py-3 font-bold text-gray-900">
                       {item.kodeBooking}
                     </td>
 
-                    <td className="py-3.5 px-4 font-semibold text-gray-800">
+                    <td className="px-5 py-3 font-semibold text-gray-900">
                       {item.namaPelanggan}
                     </td>
 
-                    <td className="py-3.5 px-4 text-[#0A64BC] font-medium">
+                    <td className="px-5 py-3 text-[#0A64BC] font-medium">
                       {item.rute}
                     </td>
 
-                    <td className="py-3.5 px-4 text-gray-600">
+                    <td className="px-5 py-3 text-gray-600">
                       {item.tanggalBerangkat}
                     </td>
 
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="px-5 py-3 text-center">
                       <span
                         className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusBadge(item.status)}`}
                       >
@@ -418,7 +416,7 @@ export default function BookingView() {
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="px-5 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <Link
                           href={`/booking/${item.kodeBooking}`}
@@ -435,7 +433,7 @@ export default function BookingView() {
                 <tr>
                   <td
                     colSpan={7}
-                    className="py-8 text-center text-gray-400 font-medium"
+                    className="h-[65px] text-center text-gray-400 font-medium"
                   >
                     {bookings.length === 0
                       ? 'Belum ada data booking dari pengguna aplikasi mobile.'
@@ -450,7 +448,7 @@ export default function BookingView() {
 
         {/* Footer Pagination */}
         {!isLoading && !errorMessage && filteredBookings.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-gray-100 gap-3 text-xs text-gray-500">
+          <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-4 border-t border-gray-100 gap-3 text-xs text-gray-500 bg-white">
             <div>
               Menampilkan <span className="font-semibold text-gray-800">{indexOfFirstItem + 1}</span> sampai{' '}
               <span className="font-semibold text-gray-800">

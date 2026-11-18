@@ -121,14 +121,14 @@ export default function ReportView() {
   const maxAmount = Math.max(...revenueChartData.map((d) => d.amount), 1);
 
   return (
-    <div className="pt-2 px-4 md:px-6 pb-6 space-y-4 w-full font-sans max-w-5xl mx-auto">
+    <div className="w-full px-9 pt-10 pb-6 space-y-5 font-sans relative">
       
       {/* Header Area Judul Halaman */}
       <div>
-        <h1 className="text-xl font-bold text-[#0A64BC] tracking-tight">
+        <h1 className="text-[26px] font-bold text-[#0A64BC] tracking-tight">
           Laporan & Statistik Keuangan
         </h1>
-        <p className="text-[11px] text-gray-500 mt-0.5">
+        <p className="text-sm text-gray-500 mt-1">
           Pantau performa pendapatan kotor, bersih, dan statistik booking. {loading && '(Memuat data dari database...)'}
         </p>
       </div>
