@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -205,14 +204,6 @@ export default function DashboardView() {
           <span className="text-[11px] sm:text-xs text-gray-400 font-medium">
             {today}
           </span>
-
-          <button
-            onClick={fetchDashboard}
-            disabled={loading}
-            className="text-xs bg-blue-50 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-100 disabled:opacity-50"
-          >
-            {loading ? 'Memuat...' : 'Refresh'}
-          </button>
         </div>
 
       </div>

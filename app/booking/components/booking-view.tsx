@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Eye } from 'lucide-react';
+import { Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface BookingItem {
   no: number;
@@ -100,6 +99,10 @@ export default function BookingView() {
   const [selectedStatus, setSelectedStatus] = useState('Semua Status');
   const [filterDate, setFilterDate] = useState('');
 
+  // State Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   // Mengambil data booking dari backend
   useEffect(() => {
     const fetchBookings = async () => {
@@ -188,6 +191,17 @@ export default function BookingView() {
       matchDate
     );
   });
+
+  // Reset halaman ke 1 setiap kali filter atau pencarian berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedRute, selectedStatus, filterDate]);
+
+  // Logika Pemotongan Data untuk Pagination (10 data per halaman)
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage) || 1;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentBookings = filteredBookings.slice(indexOfFirstItem, indexOfLastItem);
 
   // Warna Badge Status
   const getStatusBadge = (status: BookingItem['status']) => {
@@ -370,14 +384,14 @@ export default function BookingView() {
                     {errorMessage}
                   </td>
                 </tr>
-              ) : filteredBookings.length > 0 ? (
-                filteredBookings.map((item, index) => (
+              ) : currentBookings.length > 0 ? (
+                currentBookings.map((item, index) => (
                   <tr
                     key={item.kodeBooking}
                     className="hover:bg-gray-50/60 transition"
                   >
                     <td className="py-3.5 px-4 text-center text-gray-400 font-medium">
-                      {index + 1}
+                      {indexOfFirstItem + index + 1}
                     </td>
 
                     <td className="py-3.5 px-4 font-bold text-gray-800">
@@ -433,6 +447,45 @@ export default function BookingView() {
             </tbody>
           </table>
         </div>
+
+        {/* Footer Pagination */}
+        {!isLoading && !errorMessage && filteredBookings.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-gray-100 gap-3 text-xs text-gray-500">
+            <div>
+              Menampilkan <span className="font-semibold text-gray-800">{indexOfFirstItem + 1}</span> sampai{' '}
+              <span className="font-semibold text-gray-800">
+                {Math.min(indexOfLastItem, filteredBookings.length)}
+              </span>{' '}
+              dari <span className="font-semibold text-gray-800">{filteredBookings.length}</span> data booking
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer flex items-center gap-1 font-semibold"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Sebelumnya
+              </button>
+
+              <div className="px-3 py-1.5 font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-xl">
+                {currentPage} / {totalPages}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer flex items-center gap-1 font-semibold"
+              >
+                Selanjutnya
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
