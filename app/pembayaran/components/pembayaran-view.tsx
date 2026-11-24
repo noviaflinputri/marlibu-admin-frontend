@@ -111,10 +111,10 @@ export default function PembayaranView() {
   };
 
   return (
-    <div className="w-full px-9 pt-10 pb-6 space-y-5 font-sans relative">
+    <div className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 w-full font-sans relative">
       <div>
-        <h1 className="text-[26px] font-bold text-[#0A64BC] tracking-tight">Data Pembayaran</h1>
-        <p className="text-sm text-gray-500 mt-1">Kelola konfirmasi transaksi dan riwayat pembayaran pelanggan.</p>
+        <h1 className="text-lg sm:text-2xl font-bold text-[#0A64BC] tracking-tight">Data Pembayaran</h1>
+        <p className="text-[11px] sm:text-xs text-gray-500 mt-1">Kelola konfirmasi transaksi dan riwayat pembayaran pelanggan.</p>
       </div>
 
       {errorMsg && <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-xs">{errorMsg}</div>}
@@ -227,19 +227,19 @@ export default function PembayaranView() {
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden">
             <div className="bg-[#0A64BC] px-5 py-3.5 flex items-center justify-between text-white">
-              <h3 className="text-base font-bold">Detail Pembayaran</h3>
+              <h3 className="text-sm font-bold">Detail Pembayaran</h3>
               <button type="button" onClick={() => setSelectedDetail(null)} className="cursor-pointer"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="space-y-3.5 text-xs text-gray-800">
-                <p><b>Kode Pembayaran:</b> {selectedDetail.payment_code}</p>
-                <p><b>Nama:</b> {selectedDetail.customer_name || '-'}</p>
-                <p><b>Kode Booking:</b> {selectedDetail.booking_code || selectedDetail.booking_id}</p>
-                <p><b>Rute:</b> {selectedDetail.route || '-'}</p>
-                <p><b>Jadwal:</b> {formatDate(selectedDetail.booking_datetime || selectedDetail.payment_date)}</p>
-                <p><b>Total:</b> {formatRupiah(selectedDetail.amount)}</p>
-                <p><b>Metode:</b> {selectedDetail.payment_method}</p>
-                <p><b>Status:</b> {statusMap[selectedDetail.status] || selectedDetail.status}</p>
+              <div className="space-y-3.5 text-xs text-gray-700">
+                <p><b className="text-gray-800">Kode Pembayaran:</b> {selectedDetail.payment_code}</p>
+                <p><b className="text-gray-800">Nama:</b> {selectedDetail.customer_name || '-'}</p>
+                <p><b className="text-gray-800">Kode Booking:</b> {selectedDetail.booking_code || selectedDetail.booking_id}</p>
+                <p><b className="text-gray-800">Rute:</b> {selectedDetail.route || '-'}</p>
+                <p><b className="text-gray-800">Jadwal:</b> {formatDate(selectedDetail.booking_datetime || selectedDetail.payment_date)}</p>
+                <p><b className="text-gray-800">Total:</b> {formatRupiah(selectedDetail.amount)}</p>
+                <p><b className="text-gray-800">Metode:</b> {selectedDetail.payment_method}</p>
+                <p><b className="text-gray-800">Status:</b> {statusMap[selectedDetail.status] || selectedDetail.status}</p>
               </div>
               <div className="text-center space-y-2">
                 <p className="text-xs font-bold text-gray-800">Bukti Transfer</p>
@@ -257,7 +257,7 @@ export default function PembayaranView() {
               {confirmModal.type === 'ACC' ? <CheckCircle2 className="w-7 h-7" /> : <XCircle className="w-7 h-7" />}
             </div>
             <div className="space-y-1.5">
-              <h3 className="text-base font-bold text-gray-800">Konfirmasi {confirmModal.type === 'ACC' ? 'Persetujuan' : 'Penolakan'}</h3>
+              <h3 className="text-sm font-bold text-gray-800">Konfirmasi {confirmModal.type === 'ACC' ? 'Persetujuan' : 'Penolakan'}</h3>
               <p className="text-xs text-gray-500 leading-relaxed">
                 Apakah kamu yakin ingin {confirmModal.type === 'ACC' ? 'menyetujui' : 'menolak'} pembayaran dari{' '}
                 <span className="font-semibold text-gray-800">{confirmModal.payment.customer_name || confirmModal.payment.payment_code}</span>?
