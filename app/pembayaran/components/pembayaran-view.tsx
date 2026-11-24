@@ -17,6 +17,9 @@ interface PaymentItem {
   booking_code?: string | null;
   customer_name?: string | null;
   booking_datetime?: string | null;
+  departure_datetime?: string | null;
+  origin_city?: string | null;
+  destination_city?: string | null;
   passenger_count?: number;
   total_amount?: number | string;
   route?: string | null;
@@ -36,6 +39,17 @@ const formatDate = (date: string | null | undefined) => {
   const d = new Date(date.includes('T') ? date : date.replace(' ', 'T'));
   return Number.isNaN(d.getTime()) ? '-' : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
 };
+
+const getRouteLabel = (item: PaymentItem) => {
+  if (item.route && item.route.trim()) return item.route;
+  if (item.origin_city && item.destination_city) {
+    return `${item.origin_city} - ${item.destination_city}`;
+  }
+  return item.origin_city || item.destination_city || `Booking ${item.booking_code || item.booking_id}`;
+};
+
+const getScheduleDate = (item: PaymentItem) =>
+  item.departure_datetime || item.booking_datetime || item.payment_date;
 
 const getToken = () => (typeof window === 'undefined' ? '' : localStorage.getItem('admin_token') || '');
 
@@ -155,11 +169,11 @@ export default function PembayaranView() {
               <div className="space-y-2.5 text-xs text-gray-700">
                 <div className="flex items-center gap-2.5">
                   <Car className="w-4 h-4 text-[#0A64BC] shrink-0" />
-                  <span className="font-semibold text-gray-800">{item.route || `Booking ${item.booking_code || item.booking_id}`}</span>
+                  <span className="font-semibold text-gray-800">{getRouteLabel(item)}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Calendar className="w-4 h-4 text-[#0A64BC] shrink-0" />
-                  <span className="font-semibold text-gray-800">{formatDate(item.booking_datetime || item.payment_date)}</span>
+                  <span className="font-semibold text-gray-800">{formatDate(getScheduleDate(item))}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <CreditCard className="w-4 h-4 text-[#0A64BC] shrink-0" />
@@ -175,7 +189,7 @@ export default function PembayaranView() {
                   <div className="grid grid-cols-3 gap-2">
                     <button type="button" onClick={() => setSelectedProofOnly(item)} disabled={!item.proof_url} className="py-2.5 bg-[#FF6B00] hover:bg-orange-600 text-white font-semibold rounded-xl text-xs disabled:opacity-40 cursor-pointer">Lihat Bukti</button>
                     <button type="button" onClick={() => setConfirmModal({ isOpen: true, type: 'ACC', payment: item })} className="py-2.5 bg-[#FF6B00] hover:bg-orange-600 text-white font-semibold rounded-xl text-xs cursor-pointer">ACC</button>
-                    <button type="button" onClick={() => setConfirmModal({ isOpen: true, type: 'Tolak', payment: item })} className="py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-xs cursor-pointer">Tolak</button>
+                    <button type="button" onClick={() => setConfirmModal({ isOpen: true, type: 'Tolak', payment: item })} className="py-2.5 bg-[#FF6B00] hover:bg-orange-600 text-white font-semibold rounded-xl text-xs cursor-pointer">Tolak</button>
                   </div>
                 ) : (
                   <button type="button" onClick={() => setSelectedDetail(item)} className="w-full py-2.5 bg-[#0A64BC] hover:bg-blue-700 text-white font-semibold rounded-xl text-xs cursor-pointer">Lihat Detail</button>
@@ -235,8 +249,8 @@ export default function PembayaranView() {
                 <p><b className="text-gray-800">Kode Pembayaran:</b> {selectedDetail.payment_code}</p>
                 <p><b className="text-gray-800">Nama:</b> {selectedDetail.customer_name || '-'}</p>
                 <p><b className="text-gray-800">Kode Booking:</b> {selectedDetail.booking_code || selectedDetail.booking_id}</p>
-                <p><b className="text-gray-800">Rute:</b> {selectedDetail.route || '-'}</p>
-                <p><b className="text-gray-800">Jadwal:</b> {formatDate(selectedDetail.booking_datetime || selectedDetail.payment_date)}</p>
+                <p><b className="text-gray-800">Rute:</b> {getRouteLabel(selectedDetail)}</p>
+                <p><b className="text-gray-800">Jadwal:</b> {formatDate(getScheduleDate(selectedDetail))}</p>
                 <p><b className="text-gray-800">Total:</b> {formatRupiah(selectedDetail.amount)}</p>
                 <p><b className="text-gray-800">Metode:</b> {selectedDetail.payment_method}</p>
                 <p><b className="text-gray-800">Status:</b> {statusMap[selectedDetail.status] || selectedDetail.status}</p>
