@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -30,64 +29,9 @@ interface CustomerItem {
   riwayatBooking: BookingHistory[];
 }
 
-const initialCustomers: CustomerItem[] = [
-  {
-    id: '1',
-    nama: 'Andi Pratama',
-    email: 'andi@email.com',
-    telepon: '0812 3456 7890',
-    totalBooking: 5,
-    riwayatBooking: [
-      { idBooking: 'TRV001234', rute: 'Malang - Surabaya', tanggal: '12 Okt 2026', totalHarga: 500000, status: 'Selesai' },
-      { idBooking: 'TRV001102', rute: 'Surabaya - Bali', tanggal: '01 Sep 2026', totalHarga: 750000, status: 'Selesai' },
-      { idBooking: 'TRV000985', rute: 'Malang - Yogyakarta', tanggal: '15 Agu 2026', totalHarga: 600000, status: 'Selesai' },
-    ],
-  },
-  {
-    id: '2',
-    nama: 'Siti Aisyah',
-    email: 'siti@email.com',
-    telepon: '0813 5678 9012',
-    totalBooking: 3,
-    riwayatBooking: [
-      { idBooking: 'TRV001240', rute: 'Jakarta - Bandung', tanggal: '10 Okt 2026', totalHarga: 350000, status: 'Proses' },
-      { idBooking: 'TRV001155', rute: 'Bandung - Semarang', tanggal: '20 Sep 2026', totalHarga: 450000, status: 'Selesai' },
-    ],
-  },
-  {
-    id: '3',
-    nama: 'Budi Santoso',
-    email: 'budi@email.com',
-    telepon: '0821 2345 6789',
-    totalBooking: 7,
-    riwayatBooking: [
-      { idBooking: 'TRV001211', rute: 'Surabaya - Malang', tanggal: '05 Okt 2026', totalHarga: 250000, status: 'Selesai' },
-    ],
-  },
-  {
-    id: '4',
-    nama: 'Rina Lestari',
-    email: 'rina@email.com',
-    telepon: '0832 9876 5432',
-    totalBooking: 2,
-    riwayatBooking: [
-      { idBooking: 'TRV001190', rute: 'Malang - Jakarta', tanggal: '28 Sep 2026', totalHarga: 850000, status: 'Selesai' },
-    ],
-  },
-  {
-    id: '5',
-    nama: 'Dewi Anggraini',
-    email: 'dewi@email.com',
-    telepon: '0813 1112 1314',
-    totalBooking: 4,
-    riwayatBooking: [
-      { idBooking: 'TRV001188', rute: 'Surabaya - Yogyakarta', tanggal: '25 Sep 2026', totalHarga: 400000, status: 'Selesai' },
-    ],
-  },
-];
-
 export default function CustomerTable() {
-  const [customers, setCustomers] = useState<CustomerItem[]>(initialCustomers);
+  // Data dummy dihapus. Nanti isi dari API / database.
+  const [customers, setCustomers] = useState<CustomerItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerItem | null>(null);
   const [customerToDelete, setCustomerToDelete] = useState<CustomerItem | null>(null);
@@ -109,14 +53,14 @@ export default function CustomerTable() {
   };
 
   return (
-    <div className="w-full px-9 pt-10 pb-6 space-y-5 font-sans relative">
+    <div className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 w-full font-sans relative">
 
       {/* HEADER HALAMAN */}
       <div>
-        <h1 className="text-[26px] font-bold text-[#0A64BC] tracking-tight">
+        <h1 className="text-lg sm:text-2xl font-bold text-[#0A64BC] tracking-tight">
           Data Pelanggan
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-[11px] sm:text-xs text-gray-500 mt-1">
           Kelola data pelanggan dan riwayat pemesanan.
         </p>
       </div>
@@ -130,7 +74,7 @@ export default function CustomerTable() {
             placeholder="Cari nama, email, atau telepon..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-[42px] bg-white text-sm border border-gray-200 rounded-xl pl-10 pr-4 text-gray-700 shadow-sm outline-none focus:border-[#0A64BC] focus:ring-2 focus:ring-blue-100 transition"
+            className="w-full h-[42px] bg-white text-xs border border-[#A3A3A3] rounded-xl pl-10 pr-4 text-gray-700 shadow-sm outline-none focus:border-[#0A64BC] focus:ring-2 focus:ring-blue-100 transition"
           />
         </div>
       </div>
@@ -142,7 +86,7 @@ export default function CustomerTable() {
           <table className="w-full min-w-[950px] border-collapse text-left">
 
             <thead>
-              <tr className="h-[52px] border-b border-[#A3A3A3] text-[13px] font-bold text-gray-950">
+              <tr className="h-[52px] border-b border-[#A3A3A3] text-xs font-bold text-gray-950">
                 <th className="px-5 py-3 w-[6%]">NO</th>
                 <th className="px-5 py-3 w-[21%]">NAMA</th>
                 <th className="px-5 py-3 w-[21%]">EMAIL</th>
@@ -156,7 +100,7 @@ export default function CustomerTable() {
               </tr>
             </thead>
 
-            <tbody className="text-[13px] text-gray-600">
+            <tbody className="text-xs text-gray-700">
 
               {filteredCustomers.length > 0 ? (
                 filteredCustomers.map((item, idx) => (
@@ -168,7 +112,7 @@ export default function CustomerTable() {
                       {idx + 1}
                     </td>
 
-                    <td className="px-5 py-3 font-bold text-gray-900">
+                    <td className="px-5 py-3 font-bold text-gray-800">
                       {item.nama}
                     </td>
 
@@ -188,6 +132,7 @@ export default function CustomerTable() {
                       <div className="flex justify-center items-center gap-3">
 
                         <button
+                          type="button"
                           onClick={() => setSelectedCustomer(item)}
                           title="Lihat Detail"
                           className="text-gray-400 hover:text-[#0A64BC] transition cursor-pointer"
@@ -196,6 +141,7 @@ export default function CustomerTable() {
                         </button>
 
                         <button
+                          type="button"
                           onClick={() => setCustomerToDelete(item)}
                           title="Hapus Pelanggan"
                           className="text-gray-400 hover:text-red-600 transition cursor-pointer"
@@ -211,9 +157,11 @@ export default function CustomerTable() {
                 <tr>
                   <td
                     colSpan={6}
-                    className="h-[65px] text-center text-gray-400 text-sm"
+                    className="h-[65px] text-center text-gray-400 text-xs"
                   >
-                    Tidak ada data pelanggan yang ditemukan.
+                    {customers.length === 0
+                      ? 'Belum ada data pelanggan.'
+                      : 'Tidak ada data pelanggan yang ditemukan.'}
                   </td>
                 </tr>
               )}
@@ -233,12 +181,13 @@ export default function CustomerTable() {
                 <h2 className="text-sm font-bold">
                   Detail Pelanggan & Riwayat Booking
                 </h2>
-                <p className="text-xs text-blue-100 mt-1">
+                <p className="text-[11px] text-blue-100 mt-1">
                   Informasi lengkap profil dan aktivitas pemesanan.
                 </p>
               </div>
 
               <button
+                type="button"
                 onClick={() => setSelectedCustomer(null)}
                 className="p-1 rounded-lg hover:bg-white/10 transition cursor-pointer"
               >
@@ -246,15 +195,15 @@ export default function CustomerTable() {
               </button>
             </div>
 
-            <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto text-sm">
+            <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto text-xs">
 
               {/* PROFIL */}
               <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl space-y-2">
-                <p className="text-xs font-bold text-gray-400 tracking-wider">
+                <p className="text-[10px] font-bold text-gray-400 tracking-wider">
                   PROFIL PELANGGAN
                 </p>
 
-                <h3 className="font-bold text-gray-800 text-base">
+                <h3 className="font-bold text-gray-800 text-sm">
                   {selectedCustomer.nama}
                 </h3>
 
@@ -265,7 +214,7 @@ export default function CustomerTable() {
                   <p>
                     Telepon: <span className="font-medium text-gray-800">{selectedCustomer.telepon}</span>
                   </p>
-                  <p className="col-span-2">
+                  <p className="sm:col-span-2">
                     Total Seluruh Pemesanan:{' '}
                     <span className="font-bold text-[#0A64BC]">
                       {selectedCustomer.totalBooking} Tiket
@@ -276,15 +225,15 @@ export default function CustomerTable() {
 
               {/* RIWAYAT BOOKING */}
               <div className="space-y-3">
-                <p className="text-xs font-bold text-gray-400 tracking-wider">
+                <p className="text-[10px] font-bold text-gray-400 tracking-wider">
                   RIWAYAT BOOKING TIKET
                 </p>
 
                 {selectedCustomer.riwayatBooking.length > 0 ? (
                   <div className="space-y-2">
-                    {selectedCustomer.riwayatBooking.map((booking, index) => (
+                    {selectedCustomer.riwayatBooking.map((booking) => (
                       <div
-                        key={index}
+                        key={booking.idBooking}
                         className="border border-gray-200 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
                       >
                         <div className="space-y-1">
@@ -317,14 +266,14 @@ export default function CustomerTable() {
                             {booking.rute}
                           </p>
 
-                          <p className="text-xs text-gray-400 flex items-center gap-1">
+                          <p className="text-[11px] text-gray-400 flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             Tanggal: {booking.tanggal}
                           </p>
                         </div>
 
                         <div className="text-right flex sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto border-t sm:border-0 pt-2 sm:pt-0">
-                          <span className="text-xs text-gray-400">
+                          <span className="text-[11px] text-gray-400">
                             Total Harga
                           </span>
                           <span className="font-bold text-gray-800">
@@ -344,6 +293,7 @@ export default function CustomerTable() {
 
             <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-end">
               <button
+                type="button"
                 onClick={() => setSelectedCustomer(null)}
                 className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold transition cursor-pointer"
               >
@@ -364,11 +314,11 @@ export default function CustomerTable() {
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-base font-bold text-gray-900">
+              <h3 className="text-sm font-bold text-gray-800">
                 Hapus Data Pelanggan?
               </h3>
 
-              <p className="text-sm text-gray-500">
+              <p className="text-xs text-gray-500">
                 Apakah kamu yakin ingin menghapus{' '}
                 <span className="font-bold text-gray-800">
                   {customerToDelete.nama}
