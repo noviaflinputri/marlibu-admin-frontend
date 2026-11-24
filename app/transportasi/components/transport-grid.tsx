@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pencil, Trash2, AlertTriangle, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, AlertTriangle, X, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 
 const API_URL = ((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001').replace(/\/+$/, '')).endsWith('/api')
   ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001').replace(/\/+$/, '')
@@ -28,16 +28,23 @@ const initialMobilOptions = [
   { unit: 'Elf Long', kapasitas: '19 Penumpang' },
 ];
 
-const mapStatusToFE = (s: string): FrontendStatus => s === 'in_use' ? 'Dalam Perjalanan' : (s === 'maintenance' || s === 'inactive') ? 'Perawatan' : 'Tersedia';
-const mapStatusToBE = (s: FrontendStatus) => s === 'Dalam Perjalanan' ? 'in_use' : s === 'Perawatan' ? 'maintenance' : 'available';
+const mapStatusToFE = (s: string): FrontendStatus =>
+  s === 'in_use' ? 'Dalam Perjalanan' : s === 'maintenance' || s === 'inactive' ? 'Perawatan' : 'Tersedia';
+const mapStatusToBE = (s: FrontendStatus) =>
+  s === 'Dalam Perjalanan' ? 'in_use' : s === 'Perawatan' ? 'maintenance' : 'available';
 
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') || '' : '';
   const res = await fetch(`${API_URL}${endpoint}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
     ...options,
   });
   const json = await res.json().catch(() => null);
-  if (!res.ok || !json?.success) throw new Error(json?.message || `Gagal. HTTP ${res.status}`);
+  if (!res.ok || !json?.success) throw new Error(json?.message || `Gagal memproses permintaan (HTTP ${res.status})`);
   return json.data;
 }
 
@@ -49,22 +56,36 @@ export default function TransportGrid() {
   const [error, setError] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [editingItem, setEditingItem] = useState<TransportItem | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; item: TransportItem | null }>({ isOpen: false, item: null });
-  
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; item: TransportItem | null }>({
+    isOpen: false,
+    item: null,
+  });
+  const [successModal, setSuccessModal] = useState<{ isOpen: boolean; title: string; message: string }>({
+    isOpen: false,
+    title: '',
+    message: '',
+  });
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   const [form, setForm] = useState({
-    platDepan: '', platAngka: '', platBelakang: '',
-    unitMobil: initialMobilOptions[0].unit, isCustomUnit: false, customUnit: '',
-    kapasitas: initialMobilOptions[0].kapasitas, isCustomKapasitas: false, customKapasitasNum: '',
+    platDepan: '',
+    platAngka: '',
+    platBelakang: '',
+    unitMobil: initialMobilOptions[0].unit,
+    isCustomUnit: false,
+    customUnit: '',
+    kapasitas: initialMobilOptions[0].kapasitas,
+    isCustomKapasitas: false,
+    customKapasitasNum: '',
     status: 'Tersedia' as FrontendStatus,
   });
   const [platErrors, setPlatErrors] = useState({ depan: '', angka: '', belakang: '' });
 
   const fetchTransports = useCallback(async () => {
     try {
-      setLoading(true); setError('');
+      setLoading(true);
       const data = await apiRequest<any[]>('/transports');
       const mapped = data.map((item, idx) => ({
         id: item.id,
@@ -77,26 +98,38 @@ export default function TransportGrid() {
         status: mapStatusToFE(item.status),
       }));
       setTransports(mapped);
-      setMobilOptions(prev => {
+      setMobilOptions((prev) => {
         const ops = [...prev];
-        mapped.forEach(m => { if (!ops.some(o => o.unit === m.unitMobil)) ops.push({ unit: m.unitMobil, kapasitas: m.kapasitas }); });
+        mapped.forEach((m) => {
+          if (!ops.some((o) => o.unit === m.unitMobil)) ops.push({ unit: m.unitMobil, kapasitas: m.kapasitas });
+        });
         return ops;
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal memuat data');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { fetchTransports(); }, [fetchTransports]);
+  useEffect(() => {
+    fetchTransports();
+  }, [fetchTransports]);
 
   const totalPages = Math.ceil(transports.length / itemsPerPage) || 1;
   const currentTransports = transports.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const resetForm = () => {
     setForm({
-      platDepan: '', platAngka: '', platBelakang: '',
-      unitMobil: mobilOptions[0]?.unit || 'Innova Reborn', isCustomUnit: false, customUnit: '',
-      kapasitas: mobilOptions[0]?.kapasitas || '7 Penumpang', isCustomKapasitas: false, customKapasitasNum: '',
+      platDepan: '',
+      platAngka: '',
+      platBelakang: '',
+      unitMobil: mobilOptions[0]?.unit || 'Innova Reborn',
+      isCustomUnit: false,
+      customUnit: '',
+      kapasitas: mobilOptions[0]?.kapasitas || '7 Penumpang',
+      isCustomKapasitas: false,
+      customKapasitasNum: '',
       status: 'Tersedia',
     });
     setPlatErrors({ depan: '', angka: '', belakang: '' });
@@ -112,12 +145,25 @@ export default function TransportGrid() {
     };
     setPlatErrors(errs);
     if (errs.depan || errs.angka || errs.belakang) return;
-    if (form.isCustomUnit && !form.customUnit.trim()) { setError('Nama unit wajib diisi'); return; }
+    if (form.isCustomUnit && !form.customUnit.trim()) {
+      setError('Nama unit wajib diisi');
+      return;
+    }
 
     try {
-      setSaving(true); setError('');
+      setSaving(true);
+      setError('');
+      const isEdit = Boolean(editingItem);
+
+      // Ambil nomor kode tertinggi agar tidak bentrok jika ada data sebelumnya yang sudah dihapus
+      const maxCodeNum = transports.reduce((max, t) => {
+        const match = t.transport_code?.match(/(\d+)$/);
+        const num = match ? parseInt(match[1], 10) : 0;
+        return num > max ? num : max;
+      }, 0);
+
       const payload = {
-        transport_code: editingItem?.transport_code || `TRP-${String(transports.length + 1).padStart(3, '0')}`,
+        transport_code: editingItem?.transport_code || `TRP-${String(maxCodeNum + 1).padStart(3, '0')}`,
         vehicle_name: form.isCustomUnit ? form.customUnit.trim() : form.unitMobil,
         vehicle_type: editingItem?.vehicle_type || (form.isCustomUnit ? form.customUnit.trim() : form.unitMobil),
         plate_number: `${form.platDepan} ${form.platAngka} ${form.platBelakang}`,
@@ -132,26 +178,50 @@ export default function TransportGrid() {
         await apiRequest('/transports', { method: 'POST', body: JSON.stringify(payload) });
         setIsAdding(false);
       }
-      resetForm(); fetchTransports();
+      resetForm();
+      await fetchTransports();
+      setSuccessModal({
+        isOpen: true,
+        title: isEdit ? 'Data Diperbarui!' : 'Transportasi Ditambahkan!',
+        message: isEdit
+          ? 'Perubahan data armada transportasi telah berhasil disimpan.'
+          : 'Data transportasi baru telah berhasil ditambahkan ke sistem.',
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan');
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const confirmDelete = async () => {
     if (!deleteModal.item) return;
+    const deletedPlate = deleteModal.item.platNomor;
     try {
       setSaving(true);
+      setError('');
       await apiRequest(`/transports/${deleteModal.item.id}`, { method: 'DELETE' });
       setDeleteModal({ isOpen: false, item: null });
-      fetchTransports();
+      await fetchTransports();
+      setSuccessModal({
+        isOpen: true,
+        title: 'Transportasi Dihapus!',
+        message: `Data armada dengan plat "${deletedPlate}" telah berhasil dihapus dari database.`,
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gagal menghapus');
+      setError(err instanceof Error ? err.message : 'Gagal menghapus data transportasi.');
       setDeleteModal({ isOpen: false, item: null });
-    } finally { setSaving(false); }
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const badgeColor = (s: FrontendStatus) => s === 'Tersedia' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : s === 'Dalam Perjalanan' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-amber-100 text-amber-700 border-amber-200';
+  const badgeColor = (s: FrontendStatus) =>
+    s === 'Tersedia'
+      ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+      : s === 'Dalam Perjalanan'
+      ? 'bg-blue-100 text-blue-700 border-blue-200'
+      : 'bg-amber-100 text-amber-700 border-amber-200';
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full font-sans bg-white min-h-screen">
@@ -160,8 +230,26 @@ export default function TransportGrid() {
           <h1 className="text-xl sm:text-2xl font-bold text-[#0A64BC] tracking-tight">Data Transportasi</h1>
           <p className="text-xs text-gray-500 mt-1">Kelola unit mobil kendaraan dan status operasional armada.</p>
         </div>
-        <button onClick={() => { resetForm(); setIsAdding(true); }} className="px-4 py-2.5 bg-[#0A64BC] hover:bg-[#08529B] text-white font-semibold text-xs rounded-xl shadow-xs transition cursor-pointer">+ Tambah Transportasi</button>
+        <button
+          onClick={() => {
+            resetForm();
+            setIsAdding(true);
+          }}
+          className="px-4 py-2.5 bg-[#0A64BC] hover:bg-[#08529B] text-white font-semibold text-xs rounded-xl shadow-xs transition cursor-pointer"
+        >
+          + Tambah Transportasi
+        </button>
       </div>
+
+      {/* Banner Error Global */}
+      {error && !isAdding && !editingItem && (
+        <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs flex justify-between items-center gap-3">
+          <span>{error}</span>
+          <button onClick={() => setError('')} className="p-1 hover:bg-red-100 rounded-lg cursor-pointer shrink-0">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
@@ -178,9 +266,17 @@ export default function TransportGrid() {
             </thead>
             <tbody className="divide-y divide-gray-100 text-gray-700 bg-white">
               {loading ? (
-                <tr><td colSpan={6} className="py-10 text-center text-gray-400">Memuat data transportasi...</td></tr>
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-gray-400">
+                    Memuat data transportasi...
+                  </td>
+                </tr>
               ) : currentTransports.length === 0 ? (
-                <tr><td colSpan={6} className="py-10 text-center text-gray-400">Belum ada data armada transportasi.</td></tr>
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-gray-400">
+                    Belum ada data armada transportasi.
+                  </td>
+                </tr>
               ) : (
                 currentTransports.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/60 transition">
@@ -189,16 +285,41 @@ export default function TransportGrid() {
                     <td className="py-3.5 px-4 font-semibold text-[#0A64BC]">{item.unitMobil}</td>
                     <td className="py-3.5 px-4 text-gray-600">{item.kapasitas}</td>
                     <td className="py-3.5 px-4 text-center">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${badgeColor(item.status)}`}>{item.status}</span>
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${badgeColor(item.status)}`}>
+                        {item.status}
+                      </span>
                     </td>
                     <td className="py-3.5 px-4 text-center">
                       <div className="flex items-center justify-center gap-1.5">
-                        <button onClick={() => {
-                          setEditingItem(item);
-                          const [d = '', a = '', b = ''] = item.platNomor.split(' ');
-                          setForm({ ...form, platDepan: d, platAngka: a, platBelakang: b, unitMobil: item.unitMobil, kapasitas: item.kapasitas, status: item.status });
-                        }} className="p-1.5 text-gray-400 hover:text-[#0A64BC] hover:bg-blue-50 rounded-lg cursor-pointer"><Pencil className="w-4 h-4" /></button>
-                        <button onClick={() => setDeleteModal({ isOpen: true, item })} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"><Trash2 className="w-4 h-4" /></button>
+                        <button
+                          onClick={() => {
+                            setError('');
+                            setEditingItem(item);
+                            const [d = '', a = '', b = ''] = item.platNomor.split(' ');
+                            setForm({
+                              ...form,
+                              platDepan: d,
+                              platAngka: a,
+                              platBelakang: b,
+                              unitMobil: item.unitMobil,
+                              isCustomUnit: false,
+                              customUnit: '',
+                              kapasitas: item.kapasitas,
+                              isCustomKapasitas: false,
+                              customKapasitasNum: '',
+                              status: item.status,
+                            });
+                          }}
+                          className="p-1.5 text-gray-400 hover:text-[#0A64BC] hover:bg-blue-50 rounded-lg cursor-pointer"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteModal({ isOpen: true, item })}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -217,11 +338,23 @@ export default function TransportGrid() {
               <span className="font-semibold text-gray-800">{transports.length}</span> data armada
             </div>
             <div className="flex items-center gap-1.5">
-              <button type="button" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} className="p-2 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1 font-semibold cursor-pointer">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1 font-semibold cursor-pointer"
+              >
                 <ChevronLeft className="w-4 h-4" /> Sebelumnya
               </button>
-              <div className="px-3 py-1.5 font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-xl">{currentPage} / {totalPages}</div>
-              <button type="button" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className="p-2 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1 font-semibold cursor-pointer">
+              <div className="px-3 py-1.5 font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-xl">
+                {currentPage} / {totalPages}
+              </div>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1 font-semibold cursor-pointer"
+              >
                 Selanjutnya <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -234,39 +367,123 @@ export default function TransportGrid() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-6 sm:p-10">
           <div className="bg-white p-6 sm:p-8 rounded-3xl w-full max-w-lg space-y-4 shadow-2xl text-xs max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-800">{editingItem ? `Edit Armada (No. ${editingItem.no})` : 'Tambah Transportasi Baru'}</h3>
-              <button onClick={() => { setIsAdding(false); setEditingItem(null); resetForm(); }} className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer text-gray-400 hover:text-gray-700"><X className="w-5 h-5" /></button>
+              <h3 className="text-base font-bold text-gray-800">
+                {editingItem ? `Edit Armada (No. ${editingItem.no})` : 'Tambah Transportasi Baru'}
+              </h3>
+              <button
+                onClick={() => {
+                  setIsAdding(false);
+                  setEditingItem(null);
+                  resetForm();
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer text-gray-400 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            
+
             <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Plat Nomor</label>
                 <div className="grid grid-cols-3 gap-2">
-                  <input type="text" maxLength={2} value={form.platDepan} onChange={e => setForm({ ...form, platDepan: e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase() })} placeholder="B" required className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-center uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
-                  <input type="text" maxLength={4} value={form.platAngka} onChange={e => setForm({ ...form, platAngka: e.target.value.replace(/[^0-9]/g, '') })} placeholder="1234" required className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-center font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
-                  <input type="text" maxLength={3} value={form.platBelakang} onChange={e => setForm({ ...form, platBelakang: e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase() })} placeholder="KZ" required className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-center uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
+                  <input
+                    type="text"
+                    maxLength={2}
+                    value={form.platDepan}
+                    onChange={(e) => setForm({ ...form, platDepan: e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase() })}
+                    placeholder="B"
+                    required
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-center uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  />
+                  <input
+                    type="text"
+                    maxLength={4}
+                    value={form.platAngka}
+                    onChange={(e) => setForm({ ...form, platAngka: e.target.value.replace(/[^0-9]/g, '') })}
+                    placeholder="1234"
+                    required
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-center font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  />
+                  <input
+                    type="text"
+                    maxLength={3}
+                    value={form.platBelakang}
+                    onChange={(e) => setForm({ ...form, platBelakang: e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase() })}
+                    placeholder="KZ"
+                    required
+                    className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-center uppercase font-bold focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  />
                 </div>
-                {(platErrors.depan || platErrors.angka || platErrors.belakang) && <p className="text-red-500 text-[11px] mt-1 font-medium">{platErrors.depan || platErrors.angka || platErrors.belakang}</p>}
+                {(platErrors.depan || platErrors.angka || platErrors.belakang) && (
+                  <p className="text-red-500 text-[11px] mt-1 font-medium">
+                    {platErrors.depan || platErrors.angka || platErrors.belakang}
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Unit Mobil</label>
-                <select value={form.isCustomUnit ? 'NEW_UNIT' : form.unitMobil} onChange={e => e.target.value === 'NEW_UNIT' ? setForm({ ...form, isCustomUnit: true }) : setForm({ ...form, isCustomUnit: false, unitMobil: e.target.value })} className="w-full px-3.5 py-2.5 pr-10 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] appearance-none cursor-pointer bg-[length:16px_16px] bg-[position:right_12px_center] bg-no-repeat bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')]">
-                  {mobilOptions.map(m => <option key={m.unit} value={m.unit}>{m.unit}</option>)}
-                  <option value="NEW_UNIT" className="font-semibold text-[#0A64BC]">+ Tambah Unit Baru...</option>
+                <select
+                  value={form.isCustomUnit ? 'NEW_UNIT' : form.unitMobil}
+                  onChange={(e) =>
+                    e.target.value === 'NEW_UNIT'
+                      ? setForm({ ...form, isCustomUnit: true })
+                      : setForm({ ...form, isCustomUnit: false, unitMobil: e.target.value })
+                  }
+                  className="w-full px-3.5 py-2.5 pr-10 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] appearance-none cursor-pointer bg-[length:16px_16px] bg-[position:right_12px_center] bg-no-repeat bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')]"
+                >
+                  {mobilOptions.map((m) => (
+                    <option key={m.unit} value={m.unit}>
+                      {m.unit}
+                    </option>
+                  ))}
+                  <option value="NEW_UNIT" className="font-semibold text-[#0A64BC]">
+                    + Tambah Unit Baru...
+                  </option>
                 </select>
-                {form.isCustomUnit && <input type="text" value={form.customUnit} onChange={e => setForm({ ...form, customUnit: e.target.value })} placeholder="Nama unit mobil baru" required className="w-full mt-2 px-3.5 py-2.5 bg-white border border-[#0A64BC] rounded-xl focus:outline-none" />}
+                {form.isCustomUnit && (
+                  <input
+                    type="text"
+                    value={form.customUnit}
+                    onChange={(e) => setForm({ ...form, customUnit: e.target.value })}
+                    placeholder="Nama unit mobil baru"
+                    required
+                    className="w-full mt-2 px-3.5 py-2.5 bg-white border border-[#0A64BC] rounded-xl focus:outline-none"
+                  />
+                )}
               </div>
 
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Kapasitas</label>
-                <select value={form.isCustomKapasitas ? 'CUSTOM' : form.kapasitas} onChange={e => e.target.value === 'CUSTOM' ? setForm({ ...form, isCustomKapasitas: true }) : setForm({ ...form, isCustomKapasitas: false, kapasitas: e.target.value })} className="w-full px-3.5 py-2.5 pr-10 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] appearance-none cursor-pointer bg-[length:16px_16px] bg-[position:right_12px_center] bg-no-repeat bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')]">
-                  {['6 Penumpang', '7 Penumpang', '11 Penumpang', '14 Penumpang', '19 Penumpang'].map(k => <option key={k} value={k}>{k}</option>)}
-                  <option value="CUSTOM" className="font-semibold text-[#0A64BC]">+ Input Kapasitas Kustom...</option>
+                <select
+                  value={form.isCustomKapasitas ? 'CUSTOM' : form.kapasitas}
+                  onChange={(e) =>
+                    e.target.value === 'CUSTOM'
+                      ? setForm({ ...form, isCustomKapasitas: true })
+                      : setForm({ ...form, isCustomKapasitas: false, kapasitas: e.target.value })
+                  }
+                  className="w-full px-3.5 py-2.5 pr-10 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] appearance-none cursor-pointer bg-[length:16px_16px] bg-[position:right_12px_center] bg-no-repeat bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')]"
+                >
+                  {['6 Penumpang', '7 Penumpang', '11 Penumpang', '14 Penumpang', '19 Penumpang'].map((k) => (
+                    <option key={k} value={k}>
+                      {k}
+                    </option>
+                  ))}
+                  <option value="CUSTOM" className="font-semibold text-[#0A64BC]">
+                    + Input Kapasitas Kustom...
+                  </option>
                 </select>
                 {form.isCustomKapasitas && (
                   <div className="flex items-center gap-2 mt-2">
-                    <input type="number" min={1} value={form.customKapasitasNum} onChange={e => setForm({ ...form, customKapasitasNum: e.target.value })} placeholder="Jumlah" required className="w-full px-3.5 py-2.5 bg-white border border-[#0A64BC] rounded-xl" />
+                    <input
+                      type="number"
+                      min={1}
+                      value={form.customKapasitasNum}
+                      onChange={(e) => setForm({ ...form, customKapasitasNum: e.target.value })}
+                      placeholder="Jumlah"
+                      required
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#0A64BC] rounded-xl"
+                    />
                     <span className="text-gray-500 text-xs font-medium shrink-0">Penumpang</span>
                   </div>
                 )}
@@ -274,7 +491,11 @@ export default function TransportGrid() {
 
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Status Operasional</label>
-                <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value as FrontendStatus })} className="w-full px-3.5 py-2.5 pr-10 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] appearance-none cursor-pointer bg-[length:16px_16px] bg-[position:right_12px_center] bg-no-repeat bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')]">
+                <select
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value as FrontendStatus })}
+                  className="w-full px-3.5 py-2.5 pr-10 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] appearance-none cursor-pointer bg-[length:16px_16px] bg-[position:right_12px_center] bg-no-repeat bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')]"
+                >
                   <option value="Tersedia">Tersedia</option>
                   <option value="Dalam Perjalanan">Dalam Perjalanan</option>
                   <option value="Perawatan">Perawatan</option>
@@ -284,8 +505,25 @@ export default function TransportGrid() {
               {error && <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600">{error}</div>}
 
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" disabled={saving} onClick={() => { setIsAdding(false); setEditingItem(null); resetForm(); }} className="px-5 py-2.5 border border-gray-200 text-gray-600 rounded-xl font-semibold cursor-pointer hover:bg-gray-50">Batal</button>
-                <button type="submit" disabled={saving} className="px-5 py-2.5 bg-[#0A64BC] text-white rounded-xl font-semibold cursor-pointer hover:bg-[#08529B] shadow-xs">{saving ? 'Menyimpan...' : 'Simpan'}</button>
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => {
+                    setIsAdding(false);
+                    setEditingItem(null);
+                    resetForm();
+                  }}
+                  className="px-5 py-2.5 border border-gray-200 text-gray-600 rounded-xl font-semibold cursor-pointer hover:bg-gray-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-5 py-2.5 bg-[#0A64BC] text-white rounded-xl font-semibold cursor-pointer hover:bg-[#08529B] shadow-xs"
+                >
+                  {saving ? 'Menyimpan...' : 'Simpan'}
+                </button>
               </div>
             </form>
           </div>
@@ -296,12 +534,52 @@ export default function TransportGrid() {
       {deleteModal.isOpen && deleteModal.item && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 sm:p-8 rounded-3xl w-full max-w-sm text-center space-y-4 shadow-xl border border-gray-100">
-            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500"><AlertTriangle className="w-6 h-6" /></div>
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
             <h3 className="text-base font-bold text-gray-800">Hapus Data Armada?</h3>
-            <p className="text-xs text-gray-500">Apakah Anda yakin ingin menghapus armada dengan Plat <strong>"{deleteModal.item.platNomor}"</strong>?</p>
+            <p className="text-xs text-gray-500">
+              Apakah Anda yakin ingin menghapus armada dengan Plat <strong>"{deleteModal.item.platNomor}"</strong>?
+            </p>
             <div className="flex items-center justify-center gap-3 pt-2">
-              <button disabled={saving} onClick={() => setDeleteModal({ isOpen: false, item: null })} className="w-full py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-xs cursor-pointer">Batal</button>
-              <button disabled={saving} onClick={confirmDelete} className="w-full py-2.5 bg-red-600 text-white rounded-xl font-semibold text-xs cursor-pointer">{saving ? 'Menghapus...' : 'Ya, Hapus'}</button>
+              <button
+                disabled={saving}
+                onClick={() => setDeleteModal({ isOpen: false, item: null })}
+                className="w-full py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-xs cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                disabled={saving}
+                onClick={confirmDelete}
+                className="w-full py-2.5 bg-red-600 text-white rounded-xl font-semibold text-xs cursor-pointer"
+              >
+                {saving ? 'Menghapus...' : 'Ya, Hapus'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Notifikasi Sukses */}
+      {successModal.isOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl w-full max-w-sm text-center space-y-4 shadow-xl border border-gray-100">
+            <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-gray-800">{successModal.title}</h3>
+              <p className="text-xs text-gray-500">{successModal.message}</p>
+            </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setSuccessModal({ isOpen: false, title: '', message: '' })}
+                className="w-full py-2.5 bg-[#0A64BC] hover:bg-[#08529B] text-white rounded-full font-semibold text-xs shadow-xs cursor-pointer transition"
+              >
+                Oke
+              </button>
             </div>
           </div>
         </div>
