@@ -104,51 +104,51 @@ export default function RefundView() {
   };
 
   return (
-    <div className="w-full px-9 pt-10 pb-6 space-y-5 font-sans relative">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 w-full font-sans relative">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-4">
         <div>
-          <h1 className="text-[26px] font-bold text-[#0A64BC] tracking-tight">Data Refund Penumpang</h1>
-          <p className="text-sm text-gray-500 mt-1">Kelola pengajuan pengembalian dana tiket penumpang (potongan standar kebijakan 25%).</p>
+          <h1 className="text-lg sm:text-2xl font-bold text-[#0A64BC] tracking-tight">Data Refund Penumpang</h1>
+          <p className="text-[11px] sm:text-xs text-gray-500 mt-1">Kelola pengajuan pengembalian dana tiket penumpang (potongan standar kebijakan 25%).</p>
         </div>
         <div className="bg-white border border-blue-100 px-4 py-2 rounded-xl shadow-2xs flex items-center gap-3">
           <div>
-            <p className="text-[10px] font-semibold text-gray-400">Kebijakan Refund</p>
+            <p className="text-[11px] font-semibold text-gray-400">Kebijakan Refund</p>
             <p className="text-xs font-bold text-gray-800">Hak Penumpang 75%</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs space-y-1">
-          <div className="flex justify-between items-center text-gray-400"><p className="text-[11px] font-semibold">TOTAL PENGAJUAN</p><FileText className="w-4 h-4 text-[#0A64BC]" /></div>
-          <h3 className="text-lg font-extrabold text-gray-800">{refunds.length}</h3>
-          <p className="text-[11px] font-medium text-gray-400">Pengajuan tercatat</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm space-y-1">
+          <div className="flex justify-between items-center text-gray-400"><p className="text-xs font-medium">TOTAL PENGAJUAN</p><FileText className="w-4 h-4 text-[#0A64BC]" /></div>
+          <h3 className="text-xl sm:text-2xl font-extrabold text-gray-800 mt-2">{refunds.length}</h3>
+          <p className="text-xs text-gray-500 mt-1">Pengajuan tercatat</p>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs space-y-1">
-          <div className="flex justify-between items-center text-gray-400"><p className="text-[11px] font-semibold">PERLU DIPROSES</p><Clock className="w-4 h-4 text-amber-500" /></div>
-          <h3 className="text-lg font-extrabold text-gray-900">{refunds.filter(i => i.status === 'Proses').length}</h3>
-          <p className="text-[11px] font-medium text-gray-400">Menunggu respon admin</p>
+        <div className="bg-white p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm space-y-1">
+          <div className="flex justify-between items-center text-gray-400"><p className="text-xs font-medium">PERLU DIPROSES</p><Clock className="w-4 h-4 text-amber-500" /></div>
+          <h3 className="text-xl sm:text-2xl font-extrabold text-gray-900 mt-2">{refunds.filter(i => i.status === 'Proses').length}</h3>
+          <p className="text-xs text-gray-500 mt-1">Menunggu respon admin</p>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs space-y-1">
-          <div className="flex justify-between items-center text-gray-400"><p className="text-[11px] font-semibold">TOTAL NOMINAL REFUND</p><span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">75%</span></div>
-          <h3 className="text-lg font-extrabold text-gray-800">Rp {refunds.reduce((acc, curr) => acc + curr.nominalRefund, 0).toLocaleString('id-ID')}</h3>
-          <p className="text-[11px] font-medium text-gray-400">Hak refund keseluruhan</p>
+        <div className="bg-white p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm space-y-1">
+          <div className="flex justify-between items-center text-gray-400"><p className="text-xs font-medium">TOTAL NOMINAL REFUND</p><span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">75%</span></div>
+          <h3 className="text-xl sm:text-2xl font-extrabold text-gray-800 mt-2">Rp {refunds.reduce((acc, curr) => acc + curr.nominalRefund, 0).toLocaleString('id-ID')}</h3>
+          <p className="text-xs text-gray-500 mt-1">Hak refund keseluruhan</p>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs space-y-1">
-          <div className="flex justify-between items-center text-gray-400"><p className="text-[11px] font-semibold">SELESAI TRANSAKSI</p><CheckCircle2 className="w-4 h-4 text-emerald-500" /></div>
-          <h3 className="text-lg font-extrabold text-gray-800">{refunds.filter(i => i.status === 'Selesai').length}</h3>
-          <p className="text-[11px] font-medium text-gray-400">Telah dikirimkan</p>
+        <div className="bg-white p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm space-y-1">
+          <div className="flex justify-between items-center text-gray-400"><p className="text-xs font-medium">SELESAI TRANSAKSI</p><CheckCircle2 className="w-4 h-4 text-emerald-500" /></div>
+          <h3 className="text-xl sm:text-2xl font-extrabold text-gray-800 mt-2">{refunds.filter(i => i.status === 'Selesai').length}</h3>
+          <p className="text-xs text-gray-500 mt-1">Telah dikirimkan</p>
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-xs space-y-4">
+      <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-gray-400" />
             <input type="text" placeholder="Cari ID / Nama / Bank..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-gray-50 text-xs border border-gray-200 rounded-xl pl-9 pr-3.5 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0A64BC]" />
           </div>
           <div className="relative w-full sm:w-auto">
-            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} type="button" className="w-full sm:w-48 bg-[#0A64BC] text-xs font-semibold border border-[#0A64BC] rounded-xl px-4 py-2 text-white flex items-center justify-between shadow-xs cursor-pointer hover:bg-[#08529B] transition">
+            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} type="button" className="w-full sm:w-48 bg-[#0A64BC] text-xs font-semibold border border-[#0A64BC] rounded-xl px-4 py-2 text-white flex items-center justify-between shadow-2xs cursor-pointer hover:bg-[#08529B] transition">
               <span>{statusFilter}</span><ChevronDown className="w-4 h-4" />
             </button>
             {isDropdownOpen && (
@@ -163,43 +163,43 @@ export default function RefundView() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
             <thead>
-              <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-900">
-                <th className="py-3 px-3">NO</th>
-                <th className="py-3 px-3">ID BOOKING</th>
-                <th className="py-3 px-3">NAMA PENUMPANG</th>
-                <th className="py-3 px-3">NOMINAL REFUND (75%)</th>
-                <th className="py-3 px-3 text-center">STATUS</th>
-                <th className="py-3 px-3 text-right">AKSI</th>
+              <tr className="border-b border-gray-100 text-gray-400">
+                <th className="pb-3 pr-4 font-medium">NO</th>
+                <th className="pb-3 pr-4 font-medium">ID BOOKING</th>
+                <th className="pb-3 pr-4 font-medium">NAMA PENUMPANG</th>
+                <th className="pb-3 pr-4 font-medium">NOMINAL REFUND (75%)</th>
+                <th className="pb-3 pr-4 font-medium text-center">STATUS</th>
+                <th className="pb-3 font-medium text-right">AKSI</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50 text-xs">
+            <tbody className="divide-y divide-gray-50 text-gray-700">
               {loading ? (
-                <tr><td colSpan={6} className="text-center py-6 text-gray-400 text-xs">Memuat data dari database...</td></tr>
+                <tr><td colSpan={6} className="py-8 text-center text-gray-400 text-xs">Memuat data dari database...</td></tr>
               ) : currentRefunds.length > 0 ? (
                 currentRefunds.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-gray-50/80 transition">
-                    <td className="py-3.5 px-3 text-gray-500 font-medium">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                    <td className="py-3.5 px-3 font-bold text-[#0A64BC]">{item.idBooking}</td>
-                    <td className="py-3.5 px-3"><p className="font-bold text-gray-800">{item.nama}</p><p className="text-[10px] text-gray-400">{item.bank}</p></td>
-                    <td className="py-3.5 px-3"><p className="font-bold text-gray-800">Rp {item.nominalRefund.toLocaleString('id-ID')}</p><p className="text-[10px] text-gray-400 line-through">Rp {item.hargaAsli.toLocaleString('id-ID')}</p></td>
-                    <td className="py-3.5 px-3 text-center">
-                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold ${item.status === 'Proses' ? 'bg-amber-50 text-amber-600 border border-amber-200' : item.status === 'Selesai' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+                  <tr key={item.id} className="hover:bg-gray-50 transition">
+                    <td className="py-3 pr-4 text-gray-500 font-medium">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+                    <td className="py-3 pr-4 font-semibold text-[#0A64BC]">{item.idBooking}</td>
+                    <td className="py-3 pr-4"><p className="font-medium text-gray-800">{item.nama}</p><p className="text-[11px] text-gray-400">{item.bank}</p></td>
+                    <td className="py-3 pr-4"><p className="font-medium text-gray-800">Rp {item.nominalRefund.toLocaleString('id-ID')}</p><p className="text-[11px] text-gray-400 line-through">Rp {item.hargaAsli.toLocaleString('id-ID')}</p></td>
+                    <td className="py-3 pr-4 text-center">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${item.status === 'Proses' ? 'bg-amber-100 text-amber-700' : item.status === 'Selesai' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                         {item.status === 'Proses' && <Clock className="w-3 h-3" />}
                         {item.status === 'Selesai' && <CheckCircle2 className="w-3 h-3" />}
                         {item.status === 'Ditolak' && <XCircle className="w-3 h-3" />}
                         {item.status}
                       </span>
                     </td>
-                    <td className="py-3.5 px-3 text-right">
-                      <button onClick={() => setSelectedRefund(item)} className="bg-blue-50 hover:bg-[#0A64BC] hover:text-white text-[#0A64BC] font-semibold px-3.5 py-1.5 rounded-lg text-[11px] transition cursor-pointer">Detail</button>
+                    <td className="py-3 text-right">
+                      <button onClick={() => setSelectedRefund(item)} className="bg-blue-50 hover:bg-[#0A64BC] hover:text-white text-[#0A64BC] font-semibold px-3.5 py-1.5 rounded-lg text-xs transition cursor-pointer">Detail</button>
                     </td>
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan={6} className="text-center py-6 text-gray-400 text-xs">Tidak ada data refund yang ditemukan dari server.</td></tr>
+                <tr><td colSpan={6} className="py-8 text-center text-gray-400 text-xs">Tidak ada data refund yang ditemukan dari server.</td></tr>
               )}
             </tbody>
           </table>
@@ -227,7 +227,7 @@ export default function RefundView() {
             <div className="bg-[#0A64BC] text-white px-5 py-4 flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-bold">Detail Rincian Refund</h2>
-                <p className="text-[11px] text-blue-100">ID Booking: <span className="font-bold underline">{selectedRefund.idBooking}</span></p>
+                <p className="text-xs text-blue-100">ID Booking: <span className="font-bold underline">{selectedRefund.idBooking}</span></p>
               </div>
               <button onClick={() => setSelectedRefund(null)} className="p-1 rounded-lg hover:bg-white/10 text-white transition cursor-pointer"><X className="w-5 h-5" /></button>
             </div>
@@ -235,13 +235,13 @@ export default function RefundView() {
             <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto text-xs">
               <div className="bg-gray-50 border border-gray-100 p-3.5 rounded-xl space-y-2">
                 <div className="flex justify-between items-center">
-                  <p className="text-[10px] font-bold text-gray-400 tracking-wider">NAMA PENUMPANG</p>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${selectedRefund.status === 'Proses' ? 'bg-amber-50 text-amber-600 border border-amber-200' : selectedRefund.status === 'Selesai' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+                  <p className="text-[11px] font-bold text-gray-400 tracking-wider">NAMA PENUMPANG</p>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${selectedRefund.status === 'Proses' ? 'bg-amber-100 text-amber-700' : selectedRefund.status === 'Selesai' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                     {selectedRefund.status === 'Proses' ? 'Menunggu Proses' : selectedRefund.status}
                   </span>
                 </div>
                 <h3 className="font-bold text-gray-800 text-sm">{selectedRefund.nama}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-gray-500 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-gray-500 pt-1">
                   <p>✉️ {selectedRefund.email}</p>
                   <p>📞 {selectedRefund.telepon}</p>
                   <p className="col-span-2">📅 Tgl Pengajuan: {selectedRefund.tglPengajuan}</p>
@@ -249,17 +249,17 @@ export default function RefundView() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 tracking-wider">DETAIL MASALAH / ALASAN</label>
+                <label className="text-[11px] font-bold text-gray-400 tracking-wider">DETAIL MASALAH / ALASAN</label>
                 <div className="bg-amber-50/50 border border-amber-100 text-amber-900 px-3.5 py-2.5 rounded-xl font-medium">{selectedRefund.alasan}</div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-400 tracking-wider">INFORMASI TAMBAHAN / CATATAN</label>
+                <label className="text-[11px] font-bold text-gray-400 tracking-wider">INFORMASI TAMBAHAN / CATATAN</label>
                 <div className="bg-gray-50 border border-gray-200 text-gray-600 px-3.5 py-2.5 rounded-xl">{selectedRefund.catatan}</div>
               </div>
 
               <div className="bg-blue-50/30 border border-blue-100 p-4 rounded-xl space-y-2">
-                <p className="text-[10px] font-bold text-[#0A64BC] tracking-wider">RINCIAN PEMBATALAN TIKET</p>
+                <p className="text-[11px] font-bold text-[#0A64BC] tracking-wider">RINCIAN PEMBATALAN TIKET</p>
                 <div className="flex justify-between text-gray-600"><span>Total Harga Tiket (100%)</span><span className="font-semibold text-gray-800">Rp {selectedRefund.hargaAsli.toLocaleString('id-ID')}</span></div>
                 <div className="flex justify-between text-red-500"><span>Potongan Admin Kebijakan (25%)</span><span className="font-semibold">- Rp {selectedRefund.potongan.toLocaleString('id-ID')}</span></div>
                 <div className="border-t border-blue-100 pt-2 flex justify-between font-bold text-sm text-[#0A64BC]"><span>Total Hak Refund (75%)</span><span>Rp {selectedRefund.nominalRefund.toLocaleString('id-ID')}</span></div>
@@ -267,11 +267,11 @@ export default function RefundView() {
 
               <div className="bg-emerald-50/40 border border-emerald-100 p-3.5 rounded-xl flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-bold text-emerald-700 tracking-wider">METODE / TUJUAN REKENING PENGEMBALIAN</p>
+                  <p className="text-[11px] font-bold text-emerald-700 tracking-wider">METODE / TUJUAN REKENING PENGEMBALIAN</p>
                   <p className="font-bold text-gray-800 text-sm mt-0.5">{selectedRefund.bank} - {selectedRefund.rekening}</p>
-                  <p className="text-[11px] text-gray-500">a.n {selectedRefund.nama}</p>
+                  <p className="text-xs text-gray-500">a.n {selectedRefund.nama}</p>
                 </div>
-                <button onClick={() => handleCopyRekening(selectedRefund.rekening)} className="bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold px-3 py-1.5 rounded-lg text-[11px] transition flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs">
+                <button onClick={() => handleCopyRekening(selectedRefund.rekening)} className="bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs">
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copied ? 'Tersalin!' : 'Salin No.Rek'}</span>
                 </button>

@@ -10,11 +10,22 @@ export default function ReportView() {
 
   // 1. Fetch data dari backend saat halaman dimuat
   useEffect(() => {
-    fetch('http://localhost:5001/api/reports')
+    const token =
+      typeof window !== 'undefined' ? localStorage.getItem('admin_token') : '';
+
+    fetch('http://localhost:5001/api/reports', {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    })
       .then((res) => res.json())
       .then((response) => {
-        if (response.success) {
+        if (response.success && Array.isArray(response.data)) {
           setReportData(response.data);
+        } else if (Array.isArray(response)) {
+          setReportData(response);
         }
         setLoading(false);
       })
@@ -33,7 +44,7 @@ export default function ReportView() {
   }, 0);
 
   // 4. Nominal Total Refund (Sesuaikan jika backend refund sudah di-fetch)
-  const totalRefundAmount = 975000; 
+  const totalRefundAmount = 0;
 
   // 5. Pendapatan Bersih (Net Revenue)
   const netRevenue = finalGrossRevenue - totalRefundAmount;
@@ -76,25 +87,27 @@ export default function ReportView() {
   };
 
   const bookingStatusData = [
-    { 
-      label: 'Dikonfirmasi / Selesai', 
-      percentage: getPercentage(statusCounts['confirmed'] || statusCounts['completed'] || 0), 
-      color: 'bg-[#0A64BC]' 
+    {
+      label: 'Dikonfirmasi / Selesai',
+      percentage: getPercentage(
+        statusCounts['confirmed'] || statusCounts['completed'] || 0
+      ),
+      color: 'bg-[#0A64BC]',
     },
-    { 
-      label: 'Menunggu Konfirmasi', 
-      percentage: getPercentage(statusCounts['pending'] || 0), 
-      color: 'bg-[#FF6B00]' 
+    {
+      label: 'Menunggu Konfirmasi',
+      percentage: getPercentage(statusCounts['pending'] || 0),
+      color: 'bg-[#FF6B00]',
     },
-    { 
-      label: 'Dalam Perjalanan', 
-      percentage: getPercentage(statusCounts['ongoing'] || 0), 
-      color: 'bg-sky-400' 
+    {
+      label: 'Dalam Perjalanan',
+      percentage: getPercentage(statusCounts['ongoing'] || 0),
+      color: 'bg-sky-400',
     },
-    { 
-      label: 'Dibatalkan', 
-      percentage: getPercentage(statusCounts['cancelled'] || 0), 
-      color: 'bg-red-500' 
+    {
+      label: 'Dibatalkan',
+      percentage: getPercentage(statusCounts['cancelled'] || 0),
+      color: 'bg-red-500',
     },
   ];
 
@@ -104,7 +117,7 @@ export default function ReportView() {
     if (item.created_at) {
       const dateKey = new Date(item.created_at).toLocaleDateString('id-ID', {
         day: 'numeric',
-        month: 'short'
+        month: 'short',
       });
       acc[dateKey] = (acc[dateKey] || 0) + (Number(item.total_amount) || 0);
     }
@@ -121,15 +134,15 @@ export default function ReportView() {
   const maxAmount = Math.max(...revenueChartData.map((d) => d.amount), 1);
 
   return (
-    <div className="w-full px-9 pt-10 pb-6 space-y-5 font-sans relative">
-      
+    <div className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 w-full font-sans">
       {/* Header Area Judul Halaman */}
       <div>
-        <h1 className="text-[26px] font-bold text-[#0A64BC] tracking-tight">
+        <h1 className="text-lg sm:text-2xl font-bold text-[#0A64BC] tracking-tight">
           Laporan & Statistik Keuangan
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Pantau performa pendapatan kotor, bersih, dan statistik booking. {loading && '(Memuat data dari database...)'}
+        <p className="text-[11px] sm:text-xs text-gray-500 mt-1">
+          Pantau performa pendapatan kotor, bersih, dan statistik booking.{' '}
+          {loading && '(Memuat data dari database...)'}
         </p>
       </div>
 
@@ -148,15 +161,30 @@ export default function ReportView() {
       </div>
 
       {/* 4 Card Stats Ringkasan */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((item, idx) => (
-          <div key={idx} className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs space-y-1">
-            <p className="text-[11px] font-semibold text-gray-400">{item.title}</p>
-            <h3 className={`text-base font-extrabold ${idx === 3 ? 'text-[#0A64BC]' : 'text-gray-800'}`}>
+          <div
+            key={idx}
+            className="bg-white p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-gray-100 shadow-xs space-y-1"
+          >
+            <p className="text-xs font-medium text-gray-400">{item.title}</p>
+            <h3
+              className={`text-xl sm:text-2xl font-extrabold ${
+                idx === 3 ? 'text-[#0A64BC]' : 'text-gray-800'
+              }`}
+            >
               {item.value}
             </h3>
-            <p className={`text-[11px] font-semibold flex items-center gap-1 ${item.isNegative ? 'text-red-500' : 'text-emerald-500'}`}>
-              {item.isNegative ? <ArrowDownRight className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
+            <p
+              className={`text-xs font-semibold flex items-center gap-1 ${
+                item.isNegative ? 'text-red-500' : 'text-emerald-500'
+              }`}
+            >
+              {item.isNegative ? (
+                <ArrowDownRight className="w-3.5 h-3.5" />
+              ) : (
+                <TrendingUp className="w-3.5 h-3.5" />
+              )}
               <span>{item.change}</span>
             </p>
           </div>
@@ -164,32 +192,43 @@ export default function ReportView() {
       </div>
 
       {/* Section Grafik: Pendapatan & Status Booking */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Card Grafik Pendapatan Batang (100% Real-Time) */}
-        <div className="lg:col-span-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-4">
+        <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 shadow-xs space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-xs font-bold text-gray-800">Grafik Pendapatan (Rp)</h2>
-            <span className="text-[10px] text-emerald-600 font-semibold">● Real-time Database</span>
+            <h2 className="text-sm font-bold text-gray-800">
+              Grafik Pendapatan (Rp)
+            </h2>
+            <span className="text-[11px] text-emerald-600 font-semibold">
+              ● Real-time Database
+            </span>
           </div>
-          
+
           <div className="h-44 flex items-end justify-between gap-3 pt-4 border-b border-gray-100 pb-2">
             {revenueChartData.length > 0 ? (
               revenueChartData.map((bar, idx) => {
                 // Hitung tinggi relatif batang grafik (minimal 15% tinggi agar tetap terlihat rapi)
-                const heightPercent = Math.max(Math.round((bar.amount / maxAmount) * 100), 15);
+                const heightPercent = Math.max(
+                  Math.round((bar.amount / maxAmount) * 100),
+                  15
+                );
                 return (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                  <div
+                    key={idx}
+                    className="flex-1 flex flex-col items-center gap-2 h-full justify-end"
+                  >
                     <div
                       style={{ height: `${heightPercent}%` }}
                       className="w-full max-w-[32px] bg-[#0A64BC] rounded-t-lg hover:bg-[#08529B] transition-all cursor-pointer relative group"
                     >
                       {/* Tooltip saat hover menunjukkan detail nominal */}
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-[9px] py-1 px-2 rounded whitespace-nowrap z-10">
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap z-10">
                         Rp {bar.amount.toLocaleString('id-ID')}
                       </div>
                     </div>
-                    <span className="text-[10px] font-medium text-gray-400 whitespace-nowrap">{bar.date}</span>
+                    <span className="text-[11px] font-medium text-gray-400 whitespace-nowrap">
+                      {bar.date}
+                    </span>
                   </div>
                 );
               })
@@ -202,33 +241,38 @@ export default function ReportView() {
         </div>
 
         {/* Card Donut Chart Status Booking (Real-Time) */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-          <h2 className="text-xs font-bold text-gray-800">Status Booking</h2>
+        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 shadow-xs space-y-4">
+          <h2 className="text-sm font-bold text-gray-800">Status Booking</h2>
 
           <div className="flex flex-col items-center gap-4">
             <div className="relative w-32 h-32 rounded-full border-[12px] border-[#0A64BC] border-t-[#FF6B00] border-r-sky-400 border-b-gray-300 flex items-center justify-center shrink-0">
               <div className="text-center">
-                <p className="text-base font-bold text-gray-800">{totalBookingsCount}</p>
-                <p className="text-[10px] text-gray-400 font-medium">Total</p>
+                <p className="text-base font-bold text-gray-800">
+                  {totalBookingsCount}
+                </p>
+                <p className="text-[11px] text-gray-400 font-medium">Total</p>
               </div>
             </div>
 
             <div className="w-full space-y-1.5 text-xs">
               {bookingStatusData.map((status, idx) => (
-                <div key={idx} className="flex items-center justify-between text-gray-600">
+                <div
+                  key={idx}
+                  className="flex items-center justify-between text-gray-600"
+                >
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${status.color}`} />
-                    <span className="text-[10px] text-gray-600">{status.label}</span>
+                    <span className="text-xs text-gray-600">{status.label}</span>
                   </div>
-                  <span className="font-bold text-gray-800 text-[10px]">{status.percentage}</span>
+                  <span className="font-bold text-gray-800 text-xs">
+                    {status.percentage}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
         </div>
-
       </div>
-
     </div>
   );
 }
