@@ -230,15 +230,15 @@ export default function BookingView() {
   };
 
   return (
-    <div className="w-full px-9 pt-10 pb-6 space-y-5 font-sans relative">
+    <div className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6 w-full font-sans relative">
 
       {/* Header */}
       <div>
-        <h1 className="text-[26px] font-bold text-[#0A64BC] tracking-tight">
+        <h1 className="text-lg sm:text-2xl font-bold text-[#0A64BC] tracking-tight">
           Data Booking
         </h1>
 
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-[11px] sm:text-xs text-gray-500 mt-1">
           Kelola dan pantau semua pesanan travel.
         </p>
       </div>
@@ -253,14 +253,14 @@ export default function BookingView() {
             type="date"
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
-            className="text-xs px-3.5 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none text-gray-700 cursor-pointer"
+            className="text-xs px-3.5 py-2 bg-white border border-[#A3A3A3] rounded-xl focus:outline-none text-gray-700 cursor-pointer"
           />
 
           {/* Filter Rute */}
           <select
             value={selectedRute}
             onChange={(e) => setSelectedRute(e.target.value)}
-            className="text-xs px-3.5 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none text-gray-700 cursor-pointer"
+            className="text-xs px-3.5 py-2 bg-white border border-[#A3A3A3] rounded-xl focus:outline-none text-gray-700 cursor-pointer"
           >
             <option value="Semua Rute">Semua Rute</option>
 
@@ -275,7 +275,7 @@ export default function BookingView() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="text-xs px-3.5 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none text-gray-700 cursor-pointer"
+            className="text-xs px-3.5 py-2 bg-white border border-[#A3A3A3] rounded-xl focus:outline-none text-gray-700 cursor-pointer"
           >
             <option value="Semua Status">Semua Status</option>
             <option value="Dikonfirmasi">Dikonfirmasi</option>
@@ -312,7 +312,7 @@ export default function BookingView() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Cari kode booking, nama, rute..."
-            className="h-[42px] text-xs px-3.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] w-full sm:w-64 text-gray-700"
+            className="h-[42px] text-xs px-3.5 bg-white border border-[#A3A3A3] rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] w-full sm:w-64 text-gray-700"
           />
 
           <button
@@ -330,7 +330,7 @@ export default function BookingView() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left text-xs">
 
-            <thead className="h-[52px] border-b border-[#A3A3A3] text-[13px] font-bold text-gray-950 bg-white">
+            <thead className="h-[52px] border-b border-[#A3A3A3] text-xs font-bold text-gray-950 bg-white">
               <tr>
                 <th className="py-3 px-5 text-center w-[6%]">
                   NO
@@ -362,7 +362,7 @@ export default function BookingView() {
               </tr>
             </thead>
 
-            <tbody className="text-[13px] text-gray-600 bg-white">
+            <tbody className="text-xs text-gray-700 bg-white">
 
               {isLoading ? (
                 <tr>
@@ -392,11 +392,11 @@ export default function BookingView() {
                       {indexOfFirstItem + index + 1}
                     </td>
 
-                    <td className="px-5 py-3 font-bold text-gray-900">
+                    <td className="px-5 py-3 font-bold text-gray-800">
                       {item.kodeBooking}
                     </td>
 
-                    <td className="px-5 py-3 font-semibold text-gray-900">
+                    <td className="px-5 py-3 font-semibold text-gray-800">
                       {item.namaPelanggan}
                     </td>
 
@@ -404,7 +404,7 @@ export default function BookingView() {
                       {item.rute}
                     </td>
 
-                    <td className="px-5 py-3 text-gray-600">
+                    <td className="px-5 py-3 text-gray-700">
                       {item.tanggalBerangkat}
                     </td>
 
