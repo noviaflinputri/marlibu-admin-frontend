@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -60,11 +59,7 @@ export default function LoginForm() {
       }
 
       localStorage.setItem('admin_token', data.token);
-
-      localStorage.setItem(
-        'admin_user',
-        JSON.stringify(data.user)
-      );
+      localStorage.setItem('admin_user', JSON.stringify(data.user));
 
       router.replace('/dashboard');
 
@@ -225,6 +220,11 @@ export default function LoginForm() {
                 )}
               </button>
             </div>
+
+            {/* Password Information */}
+            <p className="text-[11px] text-gray-400 leading-relaxed pt-1">
+              Masukkan kata sandi akun administrator yang telah terdaftar.
+            </p>
           </div>
 
           {/* Login Button */}
