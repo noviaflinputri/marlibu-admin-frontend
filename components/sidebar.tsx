@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
@@ -72,6 +72,8 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const [imgError, setImgError] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const [openGroups, setOpenGroups] = useState<{ [key: string]: boolean }>({
     'Utama': true,
@@ -87,9 +89,41 @@ export default function Sidebar({
     }));
   };
 
-  const handleLogout = async () => {
-    await signOut({ callbackUrl: '/login' });
+  // Klik tombol Logout di sidebar -> hanya membuka dialog konfirmasi
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
   };
+
+  const handleCancelLogout = () => {
+    if (isLoggingOut) return;
+    setShowLogoutConfirm(false);
+  };
+
+  // Logout benar-benar dijalankan hanya setelah user menekan "Ya, Keluar"
+  const handleConfirmLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut({ callbackUrl: '/login' });
+    } catch (error) {
+      console.error('Gagal logout:', error);
+      setIsLoggingOut(false);
+      setShowLogoutConfirm(false);
+    }
+  };
+
+  // Tutup dialog dengan tombol Escape
+  useEffect(() => {
+    if (!showLogoutConfirm) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoggingOut) {
+        setShowLogoutConfirm(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showLogoutConfirm, isLoggingOut]);
 
   const showExpanded = isOpen || isMobileOpen;
 
@@ -255,7 +289,7 @@ export default function Sidebar({
 
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
               title={!showExpanded ? "Logout" : undefined}
               className={`w-full flex items-center font-medium transition-all text-xs text-white/90 hover:text-white cursor-pointer ${
                 showExpanded ? 'gap-2.5 px-0.5' : 'justify-center px-0'
@@ -267,6 +301,55 @@ export default function Sidebar({
           </div>
         </div>
       </aside>
+
+      {/* MODAL KONFIRMASI LOGOUT
+          Sengaja diletakkan DI LUAR <aside> supaya posisi "fixed"-nya tidak
+          terpengaruh oleh transform (translate-x) milik sidebar di mobile. */}
+      {showLogoutConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={handleCancelLogout}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="logout-title"
+          aria-describedby="logout-desc"
+        >
+          <div
+            className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-4">
+              <LogOut className="w-6 h-6 text-red-600" />
+            </div>
+
+            <h2 id="logout-title" className="text-lg font-bold text-gray-900">
+              Yakin ingin keluar?
+            </h2>
+            <p id="logout-desc" className="text-sm text-gray-500 mt-1.5">
+              Anda akan keluar dari Admin Panel Marlibu Travel dan harus login kembali untuk mengakses dashboard.
+            </p>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={handleCancelLogout}
+                disabled={isLoggingOut}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmLogout}
+                disabled={isLoggingOut}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isLoggingOut ? 'Keluar...' : 'Ya, Keluar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
