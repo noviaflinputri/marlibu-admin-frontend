@@ -157,10 +157,10 @@ export default function TransportGrid() {
     <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full font-sans bg-white min-h-screen">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#0A64BC] tracking-tight">Data Armada & Transportasi</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#0A64BC] tracking-tight">Data Transportasi</h1>
           <p className="text-xs text-gray-500 mt-1">Kelola unit mobil kendaraan dan status operasional armada.</p>
         </div>
-        <button onClick={() => { resetForm(); setIsAdding(true); }} className="px-4 py-2.5 bg-[#0A64BC] hover:bg-[#08529B] text-white font-semibold text-xs rounded-xl shadow-xs transition cursor-pointer">+ Tambah Armada</button>
+        <button onClick={() => { resetForm(); setIsAdding(true); }} className="px-4 py-2.5 bg-[#0A64BC] hover:bg-[#08529B] text-white font-semibold text-xs rounded-xl shadow-xs transition cursor-pointer">+ Tambah Transportasi</button>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
@@ -234,7 +234,7 @@ export default function TransportGrid() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-6 sm:p-10">
           <div className="bg-white p-6 sm:p-8 rounded-3xl w-full max-w-lg space-y-4 shadow-2xl text-xs max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-800">{editingItem ? `Edit Armada (No. ${editingItem.no})` : 'Tambah Armada Baru'}</h3>
+              <h3 className="text-base font-bold text-gray-800">{editingItem ? `Edit Armada (No. ${editingItem.no})` : 'Tambah Transportasi Baru'}</h3>
               <button onClick={() => { setIsAdding(false); setEditingItem(null); resetForm(); }} className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer text-gray-400 hover:text-gray-700"><X className="w-5 h-5" /></button>
             </div>
             
@@ -251,7 +251,6 @@ export default function TransportGrid() {
 
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Unit Mobil</label>
-                {/* Perbaikan styling dropdown agar panahnya proporsional dan rapi */}
                 <select value={form.isCustomUnit ? 'NEW_UNIT' : form.unitMobil} onChange={e => e.target.value === 'NEW_UNIT' ? setForm({ ...form, isCustomUnit: true }) : setForm({ ...form, isCustomUnit: false, unitMobil: e.target.value })} className="w-full px-3.5 py-2.5 pr-10 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] appearance-none cursor-pointer bg-[length:16px_16px] bg-[position:right_12px_center] bg-no-repeat bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')]">
                   {mobilOptions.map(m => <option key={m.unit} value={m.unit}>{m.unit}</option>)}
                   <option value="NEW_UNIT" className="font-semibold text-[#0A64BC]">+ Tambah Unit Baru...</option>
@@ -261,7 +260,6 @@ export default function TransportGrid() {
 
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Kapasitas</label>
-                {/* Perbaikan styling dropdown agar panahnya proporsional dan rapi */}
                 <select value={form.isCustomKapasitas ? 'CUSTOM' : form.kapasitas} onChange={e => e.target.value === 'CUSTOM' ? setForm({ ...form, isCustomKapasitas: true }) : setForm({ ...form, isCustomKapasitas: false, kapasitas: e.target.value })} className="w-full px-3.5 py-2.5 pr-10 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] appearance-none cursor-pointer bg-[length:16px_16px] bg-[position:right_12px_center] bg-no-repeat bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')]">
                   {['6 Penumpang', '7 Penumpang', '11 Penumpang', '14 Penumpang', '19 Penumpang'].map(k => <option key={k} value={k}>{k}</option>)}
                   <option value="CUSTOM" className="font-semibold text-[#0A64BC]">+ Input Kapasitas Kustom...</option>
@@ -276,7 +274,6 @@ export default function TransportGrid() {
 
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Status Operasional</label>
-                {/* Perbaikan styling dropdown agar panahnya proporsional dan rapi */}
                 <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value as FrontendStatus })} className="w-full px-3.5 py-2.5 pr-10 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] appearance-none cursor-pointer bg-[length:16px_16px] bg-[position:right_12px_center] bg-no-repeat bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')]">
                   <option value="Tersedia">Tersedia</option>
                   <option value="Dalam Perjalanan">Dalam Perjalanan</option>
