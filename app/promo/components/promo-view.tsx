@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pencil, Trash2, AlertTriangle, Loader2, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, AlertTriangle, Loader2, Plus, X, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
@@ -40,9 +40,18 @@ interface PromoForm {
 }
 
 const emptyForm: PromoForm = {
-  promo_code: '', promo_name: '', description: '', discount_type: 'percentage',
-  discount_value: '', max_discount: '', min_purchase: '0', usage_limit: '',
-  per_customer_limit: '', starts_at: '', ends_at: '', status: 'active',
+  promo_code: '',
+  promo_name: '',
+  description: '',
+  discount_type: 'percentage',
+  discount_value: '',
+  max_discount: '',
+  min_purchase: '0',
+  usage_limit: '',
+  per_customer_limit: '',
+  starts_at: '',
+  ends_at: '',
+  status: 'active',
 };
 
 const getHeaders = () => {
@@ -50,17 +59,23 @@ const getHeaders = () => {
   return { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 };
 
-const formatRupiah = (val: number | string | null) => val === null || val === '' ? '-' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(val) || 0);
+const formatRupiah = (val: number | string | null) =>
+  val === null || val === ''
+    ? '-'
+    : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(val) || 0);
 
 const formatDate = (val: string) => {
   if (!val) return '-';
   const d = new Date(val);
-  return Number.isNaN(d.getTime()) ? val.slice(0, 10) : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  return Number.isNaN(d.getTime())
+    ? val.slice(0, 10)
+    : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 const getEffectiveStatus = (promo: PromoItem): PromoStatus => {
   if (promo.status === 'inactive') return 'inactive';
-  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const end = new Date(promo.ends_at);
   if (Number.isNaN(end.getTime())) return promo.status;
   end.setHours(23, 59, 59, 999);
@@ -73,19 +88,29 @@ export default function PromoView() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [editingItem, setEditingItem] = useState<PromoItem | null>(null);
   const [form, setForm] = useState<PromoForm>(emptyForm);
+  const [isFormHovered, setIsFormHovered] = useState(false);
+
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: number | null; kodePromo: string }>({
-    isOpen: false, id: null, kodePromo: '',
+    isOpen: false,
+    id: null,
+    kodePromo: '',
+  });
+
+  const [successModal, setSuccessModal] = useState<{ isOpen: boolean; title: string; message: string }>({
+    isOpen: false,
+    title: '',
+    message: '',
   });
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   const fetchPromos = useCallback(async () => {
-    setLoading(true); setErrorMsg('');
+    setLoading(true);
+    setErrorMsg('');
     try {
       const res = await fetch(`${API_URL}/api/promos`, { method: 'GET', headers: getHeaders(), cache: 'no-store' });
       const json = await res.json();
@@ -98,17 +123,22 @@ export default function PromoView() {
     }
   }, []);
 
-  useEffect(() => { fetchPromos(); }, [fetchPromos]);
+  useEffect(() => {
+    fetchPromos();
+  }, [fetchPromos]);
 
   const totalPages = Math.ceil(promos.length / itemsPerPage) || 1;
   const currentPromos = promos.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const updateForm = (field: keyof PromoForm, value: string) => setForm(prev => ({ ...prev, [field]: value }));
+  const updateForm = (field: keyof PromoForm, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
   const openAddModal = () => {
     const todayStr = new Date().toISOString().slice(0, 10);
     setForm({ ...emptyForm, starts_at: todayStr, ends_at: todayStr });
-    setEditingItem(null); setIsAdding(true); setErrorMsg('');
+    setEditingItem(null);
+    setIsAdding(true);
+    setIsFormHovered(false);
+    setErrorMsg('');
   };
 
   const openEditModal = (promo: PromoItem) => {
@@ -126,23 +156,40 @@ export default function PromoView() {
       ends_at: promo.ends_at ? promo.ends_at.slice(0, 10) : '',
       status: promo.status,
     });
-    setEditingItem(promo); setIsAdding(false); setErrorMsg('');
+    setEditingItem(promo);
+    setIsAdding(false);
+    setIsFormHovered(false);
+    setErrorMsg('');
   };
 
   const closeFormModal = () => {
     if (saving) return;
-    setIsAdding(false); setEditingItem(null); setForm(emptyForm);
+    setIsAdding(false);
+    setEditingItem(null);
+    setForm(emptyForm);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(''); setSuccessMsg('');
+    setErrorMsg('');
 
-    if (!form.promo_code.trim() || !form.promo_name.trim()) { setErrorMsg('Kode dan nama promo wajib diisi.'); return; }
+    if (!form.promo_code.trim() || !form.promo_name.trim()) {
+      setErrorMsg('Kode dan nama promo wajib diisi.');
+      return;
+    }
     const discount = Number(form.discount_value);
-    if (!Number.isFinite(discount) || discount <= 0) { setErrorMsg('Besaran diskon harus lebih dari 0.'); return; }
-    if (form.discount_type === 'percentage' && discount > 100) { setErrorMsg('Diskon persentase maksimal 100%.'); return; }
-    if (form.ends_at < form.starts_at) { setErrorMsg('Tanggal selesai tidak boleh sebelum tanggal mulai.'); return; }
+    if (!Number.isFinite(discount) || discount <= 0) {
+      setErrorMsg('Besaran diskon harus lebih dari 0.');
+      return;
+    }
+    if (form.discount_type === 'percentage' && discount > 100) {
+      setErrorMsg('Diskon persentase maksimal 100%.');
+      return;
+    }
+    if (form.ends_at < form.starts_at) {
+      setErrorMsg('Tanggal selesai tidak boleh sebelum tanggal mulai.');
+      return;
+    }
 
     setSaving(true);
     try {
@@ -169,9 +216,15 @@ export default function PromoView() {
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.message || 'Gagal menyimpan promo.');
 
-      setSuccessMsg(isEdit ? 'Promo berhasil diperbarui.' : 'Promo berhasil ditambahkan.');
       closeFormModal();
-      fetchPromos();
+      await fetchPromos();
+      setSuccessModal({
+        isOpen: true,
+        title: isEdit ? 'Promo Diperbarui!' : 'Promo Ditambahkan!',
+        message: isEdit
+          ? 'Perubahan data promo telah berhasil disimpan.'
+          : 'Kode promo baru telah berhasil ditambahkan ke sistem.',
+      });
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Terjadi kesalahan saat menyimpan promo.');
     } finally {
@@ -181,15 +234,20 @@ export default function PromoView() {
 
   const confirmDelete = async () => {
     if (deleteModal.id === null || deleting) return;
-    setDeleting(true); setErrorMsg(''); setSuccessMsg('');
+    setDeleting(true);
+    setErrorMsg('');
     try {
       const res = await fetch(`${API_URL}/api/promos/${deleteModal.id}`, { method: 'DELETE', headers: getHeaders() });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.message || 'Gagal menghapus promo.');
 
       setDeleteModal({ isOpen: false, id: null, kodePromo: '' });
-      setSuccessMsg('Promo berhasil dihapus.');
-      fetchPromos();
+      await fetchPromos();
+      setSuccessModal({
+        isOpen: true,
+        title: 'Promo Dihapus!',
+        message: 'Data promo telah berhasil dihapus secara permanen.',
+      });
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Terjadi kesalahan saat menghapus promo.');
     } finally {
@@ -198,64 +256,138 @@ export default function PromoView() {
   };
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full font-sans bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 w-full font-sans bg-white min-h-screen">
+      {/* CSS Scrollbar Tetap Stabil (Lebar Tetap 5px, Hanya Opacity Warna yang Hilang/Timbul) */}
+      <style>{`
+        .promo-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: transparent transparent;
+        }
+        .promo-scroll::-webkit-scrollbar {
+          width: 5px;
+        }
+        .promo-scroll::-webkit-scrollbar-track {
+          background: transparent;
+          margin: 12px 0;
+        }
+        .promo-scroll::-webkit-scrollbar-thumb {
+          background-color: transparent;
+          border-radius: 9999px;
+        }
+        .promo-scroll.is-hovered {
+          scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+        }
+        .promo-scroll.is-hovered::-webkit-scrollbar-thumb {
+          background-color: rgba(156, 163, 175, 0.5);
+        }
+      `}</style>
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#0A64BC] tracking-tight">Manajemen Promo & Diskon</h1>
           <p className="text-xs text-gray-500 mt-1">Kelola kode voucher, potongan harga, dan periode promo travel.</p>
         </div>
-        <button onClick={openAddModal} className="px-4 py-2.5 bg-[#0A64BC] hover:bg-[#08529B] text-white font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer">
+        <button
+          onClick={openAddModal}
+          className="px-4 py-2.5 bg-[#0A64BC] hover:bg-[#08529B] text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer"
+        >
           <Plus className="w-4 h-4" /> Tambah Promo
         </button>
       </div>
 
-      {errorMsg && <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-xs flex justify-between items-center"><span>{errorMsg}</span><button onClick={() => setErrorMsg('')} className="cursor-pointer"><X className="w-4 h-4" /></button></div>}
-      {successMsg && <div className="p-3 rounded-xl bg-green-50 border border-green-100 text-green-700 text-xs flex justify-between items-center"><span>{successMsg}</span><button onClick={() => setSuccessMsg('')} className="cursor-pointer"><X className="w-4 h-4" /></button></div>}
+      {errorMsg && (
+        <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-xs flex justify-between items-center">
+          <span>{errorMsg}</span>
+          <button onClick={() => setErrorMsg('')} className="cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs whitespace-nowrap">
-            <thead className="bg-gray-50 text-gray-900 font-semibold border-b border-gray-100">
+      {/* Tabel Fit Tanpa Scrollbar Horizontal */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
+        <div className="w-full">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-white text-gray-900 font-bold border-b border-gray-100 uppercase">
               <tr>
-                <th className="py-3.5 px-4">ID</th>
-                <th className="py-3.5 px-4">KODE PROMO</th>
-                <th className="py-3.5 px-4">NAMA PROMO</th>
-                <th className="py-3.5 px-4">BESARAN DISKON</th>
-                <th className="py-3.5 px-4">PERIODE BERLAKU</th>
-                <th className="py-3.5 px-4 text-center">PENGGUNAAN</th>
-                <th className="py-3.5 px-4 text-center">STATUS</th>
-                <th className="py-3.5 px-4 text-center">AKSI</th>
+                <th className="py-3.5 px-2.5 lg:px-3">ID</th>
+                <th className="py-3.5 px-2.5 lg:px-3">KODE PROMO</th>
+                <th className="py-3.5 px-2.5 lg:px-3">NAMA PROMO</th>
+                <th className="py-3.5 px-2.5 lg:px-3">BESARAN DISKON</th>
+                <th className="py-3.5 px-2.5 lg:px-3">PERIODE BERLAKU</th>
+                <th className="py-3.5 px-2.5 lg:px-3 text-center">PENGGUNAAN</th>
+                <th className="py-3.5 px-2.5 lg:px-3 text-center">STATUS</th>
+                <th className="py-3.5 px-2.5 lg:px-3 text-center w-20">AKSI</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-gray-700">
+            <tbody className="divide-y divide-gray-100 text-gray-700 bg-white">
               {loading ? (
-                <tr><td colSpan={8} className="py-12 text-center"><Loader2 className="w-6 h-6 text-[#0A64BC] animate-spin mx-auto mb-2" /><span className="text-gray-400">Mengambil data promo...</span></td></tr>
+                <tr>
+                  <td colSpan={8} className="py-12 text-center">
+                    <Loader2 className="w-6 h-6 text-[#0A64BC] animate-spin mx-auto mb-2" />
+                    <span className="text-gray-400">Mengambil data promo...</span>
+                  </td>
+                </tr>
               ) : currentPromos.length > 0 ? (
-                currentPromos.map(item => {
+                currentPromos.map((item) => {
                   const status = getEffectiveStatus(item);
-                  const badgeColor = status === 'active' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : status === 'expired' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-gray-100 text-gray-700 border-gray-200';
-                  const discountLabel = item.discount_type === 'percentage' ? `${Number(item.discount_value)}%${item.max_discount ? ` (Maks. ${formatRupiah(item.max_discount)})` : ''}` : formatRupiah(item.discount_value);
-                  
+                  const badgeColor =
+                    status === 'active'
+                      ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                      : status === 'expired'
+                      ? 'bg-red-100 text-red-700 border-red-200'
+                      : 'bg-gray-100 text-gray-700 border-gray-200';
+                  const discountLabel =
+                    item.discount_type === 'percentage'
+                      ? `${Number(item.discount_value)}%${item.max_discount ? ` (Maks. ${formatRupiah(item.max_discount)})` : ''}`
+                      : formatRupiah(item.discount_value);
+
                   return (
                     <tr key={item.id} className="hover:bg-gray-50/60 transition">
-                      <td className="py-3.5 px-4 font-bold text-[#0A64BC]">{item.id}</td>
-                      <td className="py-3.5 px-4"><span className="px-2.5 py-1 bg-blue-50 text-[#0A64BC] font-mono font-bold rounded-lg border border-blue-100">{item.promo_code}</span></td>
-                      <td className="py-3.5 px-4 font-semibold text-gray-800">{item.promo_name}</td>
-                      <td className="py-3.5 px-4 font-bold text-emerald-600">{discountLabel}</td>
-                      <td className="py-3.5 px-4 text-gray-500">{formatDate(item.starts_at)} s/d {formatDate(item.ends_at)}</td>
-                      <td className="py-3.5 px-4 text-center font-semibold">{item.usage_limit !== null ? `${item.usage_limit}x` : 'Tidak terbatas'}</td>
-                      <td className="py-3.5 px-4 text-center"><span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${badgeColor}`}>{status === 'active' ? 'Aktif' : status === 'expired' ? 'Kedaluwarsa' : 'Nonaktif'}</span></td>
-                      <td className="py-3.5 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button onClick={() => openEditModal(item)} className="p-1.5 text-gray-400 hover:text-[#0A64BC] hover:bg-blue-50 rounded-lg transition cursor-pointer"><Pencil className="w-4 h-4" /></button>
-                          <button onClick={() => setDeleteModal({ isOpen: true, id: item.id, kodePromo: item.promo_code })} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"><Trash2 className="w-4 h-4" /></button>
+                      <td className="py-3.5 px-2.5 lg:px-3 font-bold text-[#0A64BC] whitespace-nowrap">{item.id}</td>
+                      <td className="py-3.5 px-2.5 lg:px-3 whitespace-nowrap">
+                        <span className="px-2.5 py-1 bg-blue-50 text-[#0A64BC] font-mono font-bold rounded-lg border border-blue-100">
+                          {item.promo_code}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-2.5 lg:px-3 font-semibold text-gray-800">{item.promo_name}</td>
+                      <td className="py-3.5 px-2.5 lg:px-3 font-bold text-emerald-600">{discountLabel}</td>
+                      <td className="py-3.5 px-2.5 lg:px-3 text-gray-500">
+                        {formatDate(item.starts_at)} s/d {formatDate(item.ends_at)}
+                      </td>
+                      <td className="py-3.5 px-2.5 lg:px-3 text-center font-semibold whitespace-nowrap">
+                        {item.usage_limit !== null ? `${item.usage_limit}x` : 'Tidak terbatas'}
+                      </td>
+                      <td className="py-3.5 px-2.5 lg:px-3 text-center whitespace-nowrap">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${badgeColor}`}>
+                          {status === 'active' ? 'Aktif' : status === 'expired' ? 'Kedaluwarsa' : 'Nonaktif'}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-2.5 lg:px-3 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => openEditModal(item)}
+                            className="p-1.5 text-gray-400 hover:text-[#0A64BC] hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteModal({ isOpen: true, id: item.id, kodePromo: item.promo_code })}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
                   );
                 })
               ) : (
-                <tr><td colSpan={8} className="py-12 text-center text-gray-400">Belum ada data promo dari database.</td></tr>
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-gray-400">
+                    Belum ada data promo dari database.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -263,7 +395,7 @@ export default function PromoView() {
 
         {/* FOOTER PAGINATION */}
         {!loading && promos.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between border-t border-gray-100 p-4 gap-3 text-xs text-gray-500 bg-white">
+          <div className="flex flex-col sm:flex-row items-center justify-between border-t border-gray-100 px-4 py-3 gap-3 text-xs text-gray-500 bg-white">
             <div>
               Menampilkan <span className="font-semibold text-gray-800">{(currentPage - 1) * itemsPerPage + 1}</span> sampai{' '}
               <span className="font-semibold text-gray-800">{Math.min(currentPage * itemsPerPage, promos.length)}</span> dari{' '}
@@ -294,81 +426,194 @@ export default function PromoView() {
         )}
       </div>
 
-      {/* MODAL TAMBAH / EDIT */}
+      {/* MODAL TAMBAH / EDIT MELENGKUNG (rounded-3xl) + SCROLL KE BAWAH + TANPA PERGERAKAN */}
       {(isAdding || editingItem) && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
-            <div className="flex items-center justify-between mb-5">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div
+            onMouseEnter={() => setIsFormHovered(true)}
+            onMouseLeave={() => setIsFormHovered(false)}
+            className="bg-white rounded-3xl w-full max-w-lg shadow-xl border border-gray-100 overflow-hidden flex flex-col max-h-[88vh]"
+          >
+            {/* Header Modal (Tetap di Atas) */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-3 bg-white shrink-0">
               <h3 className="text-base font-bold text-gray-800">{editingItem ? 'Edit Promo' : 'Tambah Promo Baru'}</h3>
-              <button onClick={closeFormModal} disabled={saving} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg cursor-pointer"><X className="w-5 h-5" /></button>
+              <button
+                onClick={closeFormModal}
+                disabled={saving}
+                className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-full cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3 text-xs">
+            {/* Body Form Vertikal (Scroll ke Bawah, Scrollbar Hilang/Timbul Tanpa Menggeser Kolom) */}
+            <form
+              onSubmit={handleSubmit}
+              className={`promo-scroll ${isFormHovered ? 'is-hovered' : ''} overflow-y-auto pl-6 pr-5 pb-6 space-y-3 text-xs`}
+            >
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Kode Promo</label>
-                <input type="text" value={form.promo_code} onChange={e => updateForm('promo_code', e.target.value.toUpperCase())} placeholder="Contoh: LIBURANSERU" required maxLength={50} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl uppercase focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
+                <input
+                  type="text"
+                  value={form.promo_code}
+                  onChange={(e) => updateForm('promo_code', e.target.value.toUpperCase())}
+                  placeholder="Contoh: LIBURANSERU"
+                  required
+                  maxLength={50}
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl uppercase focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                />
               </div>
+
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Nama Promo</label>
-                <input type="text" value={form.promo_name} onChange={e => updateForm('promo_name', e.target.value)} placeholder="Contoh: Diskon Akhir Tahun" required maxLength={150} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
+                <input
+                  type="text"
+                  value={form.promo_name}
+                  onChange={(e) => updateForm('promo_name', e.target.value)}
+                  placeholder="Contoh: Diskon Akhir Tahun"
+                  required
+                  maxLength={150}
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                />
               </div>
+
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Deskripsi</label>
-                <textarea value={form.description} onChange={e => updateForm('description', e.target.value)} placeholder="Deskripsi promo (opsional)" rows={2} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
+                <textarea
+                  value={form.description}
+                  onChange={(e) => updateForm('description', e.target.value)}
+                  placeholder="Deskripsi promo (opsional)"
+                  rows={2}
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                />
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-600 font-semibold mb-1">Jenis Diskon</label>
-                  <select value={form.discount_type} onChange={e => updateForm('discount_type', e.target.value as DiscountType)} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] cursor-pointer">
+                  <select
+                    value={form.discount_type}
+                    onChange={(e) => updateForm('discount_type', e.target.value as DiscountType)}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] cursor-pointer"
+                  >
                     <option value="percentage">Persentase (%)</option>
                     <option value="fixed">Nominal (Rp)</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-gray-600 font-semibold mb-1">Besaran Diskon</label>
-                  <input type="number" min="0" step="0.01" value={form.discount_value} onChange={e => updateForm('discount_value', e.target.value)} placeholder={form.discount_type === 'percentage' ? 'Contoh: 20' : 'Contoh: 25000'} required className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.discount_value}
+                    onChange={(e) => updateForm('discount_value', e.target.value)}
+                    placeholder={form.discount_type === 'percentage' ? 'Contoh: 20' : 'Contoh: 25000'}
+                    required
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  />
                 </div>
               </div>
+
               {form.discount_type === 'percentage' && (
                 <div>
                   <label className="block text-gray-600 font-semibold mb-1">Maksimal Diskon (Rp)</label>
-                  <input type="number" min="0" value={form.max_discount} onChange={e => updateForm('max_discount', e.target.value)} placeholder="Contoh: 50000" className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.max_discount}
+                    onChange={(e) => updateForm('max_discount', e.target.value)}
+                    placeholder="Contoh: 50000"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  />
                 </div>
               )}
+
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Minimum Pembelian (Rp)</label>
-                <input type="number" min="0" value={form.min_purchase} onChange={e => updateForm('min_purchase', e.target.value)} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
+                <input
+                  type="number"
+                  min="0"
+                  value={form.min_purchase}
+                  onChange={(e) => updateForm('min_purchase', e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                />
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-600 font-semibold mb-1">Kuota Penggunaan</label>
-                  <input type="number" min="1" value={form.usage_limit} onChange={e => updateForm('usage_limit', e.target.value)} placeholder="Kosong = unlimited" className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.usage_limit}
+                    onChange={(e) => updateForm('usage_limit', e.target.value)}
+                    placeholder="Kosong = unlimited"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  />
                 </div>
                 <div>
                   <label className="block text-gray-600 font-semibold mb-1">Limit per Pelanggan</label>
-                  <input type="number" min="1" value={form.per_customer_limit} onChange={e => updateForm('per_customer_limit', e.target.value)} placeholder="Opsional" className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.per_customer_limit}
+                    onChange={(e) => updateForm('per_customer_limit', e.target.value)}
+                    placeholder="Opsional"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  />
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-600 font-semibold mb-1">Tanggal Mulai</label>
-                  <input type="date" value={form.starts_at} onChange={e => updateForm('starts_at', e.target.value)} required className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
+                  <input
+                    type="date"
+                    value={form.starts_at}
+                    onChange={(e) => updateForm('starts_at', e.target.value)}
+                    required
+                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  />
                 </div>
                 <div>
                   <label className="block text-gray-600 font-semibold mb-1">Tanggal Selesai</label>
-                  <input type="date" value={form.ends_at} onChange={e => updateForm('ends_at', e.target.value)} required className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]" />
+                  <input
+                    type="date"
+                    value={form.ends_at}
+                    onChange={(e) => updateForm('ends_at', e.target.value)}
+                    required
+                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC]"
+                  />
                 </div>
               </div>
+
               <div>
                 <label className="block text-gray-600 font-semibold mb-1">Status Promo</label>
-                <select value={form.status} onChange={e => updateForm('status', e.target.value as PromoStatus)} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] cursor-pointer">
+                <select
+                  value={form.status}
+                  onChange={(e) => updateForm('status', e.target.value as PromoStatus)}
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0A64BC] cursor-pointer"
+                >
                   <option value="active">Aktif</option>
                   <option value="inactive">Nonaktif</option>
                 </select>
               </div>
-              <div className="flex justify-end gap-2 pt-4">
-                <button type="button" onClick={closeFormModal} disabled={saving} className="px-5 py-2.5 border border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 cursor-pointer">Batal</button>
-                <button type="submit" disabled={saving} className="px-5 py-2.5 bg-[#0A64BC] text-white rounded-xl font-semibold hover:bg-[#08529B] flex items-center gap-2 cursor-pointer">
+
+              <div className="flex justify-end gap-2 pt-3">
+                <button
+                  type="button"
+                  onClick={closeFormModal}
+                  disabled={saving}
+                  className="px-5 py-2.5 border border-gray-200 text-gray-600 rounded-full font-semibold hover:bg-gray-50 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-5 py-2.5 bg-[#0A64BC] text-white rounded-full font-semibold hover:bg-[#08529B] flex items-center gap-2 cursor-pointer"
+                >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                   {saving ? 'Menyimpan...' : editingItem ? 'Simpan Perubahan' : 'Simpan Promo'}
                 </button>
@@ -380,18 +625,56 @@ export default function PromoView() {
 
       {/* MODAL HAPUS */}
       {deleteModal.isOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 sm:p-8 rounded-3xl w-full max-w-sm text-center space-y-4 shadow-xl border border-gray-100">
-            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500"><AlertTriangle className="w-6 h-6" /></div>
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
             <div className="space-y-1">
               <h3 className="text-base font-bold text-gray-800">Hapus Promo?</h3>
-              <p className="text-xs text-gray-500">Apakah Anda yakin ingin menghapus kode promo <strong>"{deleteModal.kodePromo}"</strong>?</p>
+              <p className="text-xs text-gray-500">
+                Apakah Anda yakin ingin menghapus kode promo <strong>"{deleteModal.kodePromo}"</strong>?
+              </p>
             </div>
             <div className="flex items-center justify-center gap-3 pt-2">
-              <button disabled={deleting} onClick={() => setDeleteModal({ isOpen: false, id: null, kodePromo: '' })} className="w-full py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-xs cursor-pointer">Batal</button>
-              <button disabled={deleting} onClick={confirmDelete} className="w-full py-2.5 bg-red-600 text-white rounded-xl font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer">
+              <button
+                disabled={deleting}
+                onClick={() => setDeleteModal({ isOpen: false, id: null, kodePromo: '' })}
+                className="w-full py-2.5 bg-gray-100 text-gray-700 rounded-full font-semibold text-xs cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                disabled={deleting}
+                onClick={confirmDelete}
+                className="w-full py-2.5 bg-red-600 text-white rounded-full font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer"
+              >
                 {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
                 {deleting ? 'Menghapus...' : 'Ya, Hapus'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL NOTIFIKASI BERHASIL UI MODERN */}
+      {successModal.isOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl w-full max-w-sm text-center space-y-4 shadow-xl border border-gray-100">
+            <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-gray-800">{successModal.title}</h3>
+              <p className="text-xs text-gray-500">{successModal.message}</p>
+            </div>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setSuccessModal({ isOpen: false, title: '', message: '' })}
+                className="w-full py-2.5 bg-[#0A64BC] hover:bg-[#08529B] text-white rounded-full font-semibold text-xs shadow-xs cursor-pointer transition"
+              >
+                Oke
               </button>
             </div>
           </div>
